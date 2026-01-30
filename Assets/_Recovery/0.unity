@@ -4308,8 +4308,8 @@ MonoBehaviour:
     m_Bits: 4294967295
   gridWidth: 60
   gridHeight: 60
-  cellSize: 4
-  gridOrigin: {x: -50, y: 0, z: -50}
+  cellSize: 1
+  gridOrigin: {x: -40, y: 0, z: -30.00001}
   scanOnStart: 1
   drawGizmos: 1
   gizmoFloorColor: {r: 0, g: 0, b: 0, a: 0.3}
@@ -4322,12 +4322,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 132760391}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1132106380}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &132760394
 MonoBehaviour:
@@ -10458,7 +10458,6 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 733761067}
-  - {fileID: 801634313}
   m_Father: {fileID: 494201002}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
@@ -13430,7 +13429,6 @@ GameObject:
   - component: {fileID: 733761067}
   - component: {fileID: 733761068}
   - component: {fileID: 733761069}
-  - component: {fileID: 733761070}
   m_Layer: 5
   m_Name: GridContainer
   m_TagString: Untagged
@@ -13449,13 +13447,14 @@ RectTransform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 801634313}
   m_Father: {fileID: 556743904}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 300, y: 300}
+  m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &733761068
 MonoBehaviour:
@@ -13477,7 +13476,7 @@ MonoBehaviour:
   m_ChildAlignment: 0
   m_StartCorner: 0
   m_StartAxis: 0
-  m_CellSize: {x: 12, y: 12}
+  m_CellSize: {x: 30, y: 30}
   m_Spacing: {x: 0, y: 0}
   m_Constraint: 1
   m_ConstraintCount: 12
@@ -13496,22 +13495,8 @@ MonoBehaviour:
   gridModel: {fileID: 11400000, guid: 63f301ece8eaa514eaf037827d03645b, type: 2}
   colorConfig: {fileID: 11400000, guid: aea394f6cb319744cb27e38433cc9d93, type: 2}
   cellPrefab: {fileID: 2044715541140975160, guid: 912c1ad417c866140b3b31c07dddc06e, type: 3}
-  gridLayout: {fileID: 733761068}
+  gridLayout: {fileID: 0}
   cellUISize: 30
---- !u!114 &733761070
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 733761066}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 39a93658e5c70a044acc494c208cc7a9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GlobalGameJam.MinimapUIDebugger
-  gridView: {fileID: 733761069}
-  canvas: {fileID: 494201001}
 --- !u!1001 &739050896
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -13889,6 +13874,58 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: e8feb2d034bfd3a40b6c262bcdb407f2, type: 3}
+--- !u!1 &741141989
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 741141990}
+  - component: {fileID: 741141991}
+  m_Layer: 0
+  m_Name: MinimapViewportManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &741141990
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 741141989}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1132106380}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &741141991
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 741141989}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2fc59bfb513b5b5458c2c6f1ee193d7a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GlobalGameJam.MinimapViewport
+  fullGridModel: {fileID: 11400000, guid: 63f301ece8eaa514eaf037827d03645b, type: 2}
+  gridView: {fileID: 733761069}
+  playerTransform: {fileID: 487506243}
+  viewportWidth: 12
+  viewportHeight: 12
+  centerOnPlayer: 1
+  updateEveryFrame: 0
+  updateInterval: 0.1
 --- !u!43 &743648606
 Mesh:
   m_ObjectHideFlags: 0
@@ -14342,17 +14379,17 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 801634309}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 556743904}
+  m_Father: {fileID: 733761067}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 30, y: 30}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!43 &806442698
 Mesh:
@@ -21880,6 +21917,40 @@ Mesh:
       - serializedVersion: 1
         m_IndexStart: 0
         m_IndexCount: 0
+--- !u!1 &1132106379
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1132106380}
+  m_Layer: 0
+  m_Name: Minimap
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1132106380
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1132106379}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 132760393}
+  - {fileID: 1408032833}
+  - {fileID: 741141990}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!43 &1138399820
 Mesh:
   m_ObjectHideFlags: 0
@@ -28796,8 +28867,6 @@ MonoBehaviour:
   playerMarker: {fileID: 801634310}
   gridScanner: {fileID: 132760392}
   playerTransform: {fileID: 487506243}
-  viewportWidth: 12
-  viewportHeight: 12
 --- !u!4 &1408032833
 Transform:
   m_ObjectHideFlags: 0
@@ -28806,12 +28875,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1408032831}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1132106380}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &1413077033 stripped
 Transform:
@@ -41479,58 +41548,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 3511497307153291399, guid: e8feb2d034bfd3a40b6c262bcdb407f2, type: 3}
   m_PrefabInstance: {fileID: 1904140677}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &1968927567
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1968927569}
-  - component: {fileID: 1968927568}
-  m_Layer: 0
-  m_Name: MinimapViewportManager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1968927568
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1968927567}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2fc59bfb513b5b5458c2c6f1ee193d7a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::GlobalGameJam.MinimapViewport
-  fullGridModel: {fileID: 11400000, guid: 63f301ece8eaa514eaf037827d03645b, type: 2}
-  gridView: {fileID: 733761069}
-  playerTransform: {fileID: 487506243}
-  viewportWidth: 10
-  viewportHeight: 10
-  centerOnPlayer: 1
-  updateEveryFrame: 0
-  updateInterval: 0.1
---- !u!4 &1968927569
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1968927567}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1975110044
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -47106,8 +47123,6 @@ SceneRoots:
   - {fileID: 832575519}
   - {fileID: 961552354}
   - {fileID: 552155883}
-  - {fileID: 132760393}
+  - {fileID: 1132106380}
   - {fileID: 494201002}
   - {fileID: 710624934}
-  - {fileID: 1408032833}
-  - {fileID: 1968927569}
