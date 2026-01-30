@@ -23,21 +23,14 @@ namespace GlobalGameJam
         [SerializeField] private Vector3 gridOrigin = Vector3.zero;
 
         [Header("Runtime Settings")]
-        [SerializeField] private bool scanOnStart = true;
+        // scanOnStart removed - call ScanScene() manually from Loading Screen
 
         [Header("Debug")]
         [SerializeField] private bool drawGizmos = true;
         [SerializeField] private Color gizmoFloorColor = new Color(0, 0, 0, 0.3f);
         [SerializeField] private Color gizmoWallColor = new Color(1, 1, 1, 0.5f);
 
-        private void Start()
-        {
-            if (scanOnStart)
-            {
-                Debug.Log("[GridScanner] Auto-scanning scene on Start...");
-                ScanScene();
-            }
-        }
+        // Start() removed - call ScanScene() manually from Loading Screen or ViewModel
 
         /// <summary>
         /// Scan the scene and populate grid model
@@ -73,7 +66,7 @@ namespace GlobalGameJam
             // Post-process: thin wall corners to single cells
             ThinWallCorners();
 
-            Debug.Log($"[GridScanner] Scan done: {floorObjects.Length} floors, {wallObjects.Length} walls");
+            // Debug.Log($"[GridScanner] Scan done: {floorObjects.Length} floors, {wallObjects.Length} walls");
         }
 
         /// <summary>
@@ -209,7 +202,7 @@ namespace GlobalGameJam
             
             if (cellsToRemove.Count > 0)
             {
-                Debug.Log($"[GridScanner] Pruned {cellsToRemove.Count} wall stubs (converted to Floor)");
+                // Debug.Log($"[GridScanner] Pruned {cellsToRemove.Count} wall stubs (converted to Floor)");
             }
         }
 

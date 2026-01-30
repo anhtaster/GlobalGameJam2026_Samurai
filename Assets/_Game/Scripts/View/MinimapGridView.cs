@@ -7,7 +7,6 @@ namespace GlobalGameJam
     public class MinimapGridView : MonoBehaviour
     {
         [Header("References")]
-        [SerializeField] private MinimapGridModel gridModel;
         [SerializeField] private MinimapColorConfig colorConfig;
         [SerializeField] private GameObject cellPrefab;
         [SerializeField] private GridLayoutGroup gridLayout;
@@ -16,8 +15,9 @@ namespace GlobalGameJam
         [SerializeField] private float cellUISize = 30f;
 
         private Dictionary<Vector2Int, MinimapCellView> cellViews = new Dictionary<Vector2Int, MinimapCellView>();
+        private int currentWidth = -1;
+        private int currentHeight = -1;
 
-        public MinimapGridModel GridModel => gridModel;
         public MinimapColorConfig ColorConfig => colorConfig;
 
         private void Awake()
@@ -26,20 +26,6 @@ namespace GlobalGameJam
             {
                 gridLayout = GetComponent<GridLayoutGroup>();
             }
-        }
-
-        /// <summary>
-        /// Generate the minimap grid UI
-        /// </summary>
-        public void GenerateGrid()
-        {
-            if (gridModel == null)
-            {
-                Debug.LogError("[MinimapGridView] GridModel is not assigned!");
-                return;
-            }
-
-            GenerateGrid(gridModel.GridWidth, gridModel.GridHeight);
         }
 
         /// <summary>
@@ -53,14 +39,16 @@ namespace GlobalGameJam
                 return;
             }
 
-            // Initialize grid model if assigned
-            if (gridModel != null)
+            if (currentWidth == width && currentHeight == height && cellViews.Count == width * height)
             {
-                gridModel.Initialize();
+                return;
             }
 
             // Clear existing cells
             ClearGrid();
+
+            currentWidth = width;
+            currentHeight = height;
 
             // Setup grid layout with custom size
             SetupGridLayout(width);
@@ -76,14 +64,40 @@ namespace GlobalGameJam
                 }
             }
 
-            Debug.Log($"[MinimapGridView] Generated {cellViews.Count} cell views ({width}x{height})");
+            // Debug.Log($"[MinimapGridView] Generated {cellViews.Count} cell views ({width}x{height})");
         }
 
-        private void SetupGridLayout()
+        public void EnsureGrid(int width, int height)
         {
-            if (gridModel != null)
+            GenerateGrid(width, height);
+        }
+
+        public void UpdateCells(MinimapViewportData data)
+        {
+            if (data == null)
+                return;
+
+            if (currentWidth != data.Width || currentHeight != data.Height || cellViews.Count != data.Width * data.Height)
             {
-                SetupGridLayout(gridModel.GridWidth);
+                GenerateGrid(data.Width, data.Height);
+            }
+
+            // Batch update to reduce overhead
+            for (int viewY = 0; viewY < data.Height; viewY++)
+            {
+                for (int viewX = 0; viewX < data.Width; viewX++)
+                {
+                    MinimapCellView cellView = GetCellView(viewX, viewY);
+                    if (cellView != null)
+                    {
+                        CellType newType = data.GetCellType(viewX, viewY);
+                        // Only update if cell type changed to reduce SetCellType calls
+                        if (cellView.GetCellData()?.CellType != newType)
+                        {
+                            cellView.SetCellType(newType);
+                        }
+                    }
+                }
             }
         }
 
@@ -101,34 +115,6 @@ namespace GlobalGameJam
             {
                 Debug.LogError("[MinimapGridView] GridLayout is NULL!");
             }
-        }
-
-        /// <summary>
-        /// Create cell view with grid model data
-        /// </summary>
-        private void CreateCellView(int x, int y)
-        {
-            Vector2Int gridPos = new Vector2Int(x, y);
-            MinimapCellData cellData = gridModel.GetCell(gridPos);
-
-            if (cellData == null)
-                return;
-
-            // Instantiate cell prefab
-            GameObject cellObj = Instantiate(cellPrefab, transform);
-            cellObj.name = $"Cell_{x}_{y}";
-
-            // Get and initialize cell view component
-            MinimapCellView cellView = cellObj.GetComponent<MinimapCellView>();
-            if (cellView == null)
-            {
-                cellView = cellObj.AddComponent<MinimapCellView>();
-            }
-
-            cellView.Initialize(cellData, colorConfig);
-
-            // Store reference
-            cellViews[gridPos] = cellView;
         }
 
         /// <summary>
@@ -168,6 +154,8 @@ namespace GlobalGameJam
             }
 
             cellViews.Clear();
+            currentWidth = -1;
+            currentHeight = -1;
         }
 
         public MinimapCellView GetCellView(Vector2Int gridPos)

@@ -12,7 +12,6 @@ namespace GlobalGameJam
         [SerializeField] private MinimapGridModel gridModel;
 
         [Header("Debug Visualization")]
-        [SerializeField] private bool logGridData = true;
         [SerializeField] private bool drawDebugCubes = true;
         [SerializeField] private float debugCubeHeight = 0.5f;
 
@@ -37,10 +36,10 @@ namespace GlobalGameJam
             int wallCount = 0;
             int emptyCount = 0;
 
-            Debug.Log("=== GRID SCAN RESULTS ===");
-            Debug.Log($"Grid Size: {gridModel.GridWidth}x{gridModel.GridHeight}");
-            Debug.Log($"Cell Size: {gridModel.CellSize}");
-            Debug.Log($"Grid Origin: {gridModel.GridOrigin}");
+            // Debug.Log("=== GRID SCAN RESULTS ===");
+            // Debug.Log($"Grid Size: {gridModel.GridWidth}x{gridModel.GridHeight}");
+            // Debug.Log($"Cell Size: {gridModel.CellSize}");
+            // Debug.Log($"Grid Origin: {gridModel.GridOrigin}");
 
             for (int x = 0; x < gridModel.GridWidth; x++)
             {
@@ -53,13 +52,13 @@ namespace GlobalGameJam
                         {
                             case CellType.Floor:
                                 floorCount++;
-                                if (logGridData)
-                                    Debug.Log($"  [{x},{y}] = FLOOR (Object: {cell.WorldObject?.name ?? "null"})");
+                                // if (logGridData)
+                                //     Debug.Log($"  [{x},{y}] = FLOOR (Object: {cell.WorldObject?.name ?? "null"})");
                                 break;
                             case CellType.Wall:
                                 wallCount++;
-                                if (logGridData)
-                                    Debug.Log($"  [{x},{y}] = WALL (Object: {cell.WorldObject?.name ?? "null"})");
+                                // if (logGridData)
+                                //     Debug.Log($"  [{x},{y}] = WALL (Object: {cell.WorldObject?.name ?? "null"})");
                                 break;
                             case CellType.Empty:
                                 emptyCount++;
@@ -69,11 +68,11 @@ namespace GlobalGameJam
                 }
             }
 
-            Debug.Log($"=== SUMMARY ===");
-            Debug.Log($"Total Cells: {gridModel.GridWidth * gridModel.GridHeight}");
-            Debug.Log($"Floor Cells: {floorCount}");
-            Debug.Log($"Wall Cells: {wallCount}");
-            Debug.Log($"Empty Cells: {emptyCount}");
+            // Debug.Log($"=== SUMMARY ===");
+            // Debug.Log($"Total Cells: {gridModel.GridWidth * gridModel.GridHeight}");
+            // Debug.Log($"Floor Cells: {floorCount}");
+            // Debug.Log($"Wall Cells: {wallCount}");
+            // Debug.Log($"Empty Cells: {emptyCount}");
 
             if (floorCount == 0 && wallCount == 0)
             {

@@ -8,16 +8,17 @@ namespace GlobalGameJam
         [Header("References")]
         [SerializeField] private Image markerImage;
         [SerializeField] private MinimapGridView gridView;
-        [SerializeField] private Transform playerTransform;
+        [SerializeField] private MinimapGridViewModel viewModel;
 
         [Header("Settings")]
         [SerializeField] private MinimapColorConfig colorConfig;
         [SerializeField] private float smoothSpeed = 5f;
         [SerializeField] private bool smoothMovement = true;
+        [SerializeField] private bool hideOnWall = true;
 
-        private Vector2Int currentGridPosition;
-        private Vector2Int previousGridPosition;
         private RectTransform markerRect; // Cache RectTransform
+        private Vector3 targetPosition;
+        private bool hasTarget;
 
         private void Awake()
         {
@@ -40,65 +41,112 @@ namespace GlobalGameJam
 
         private void Update()
         {
-            if (playerTransform == null || gridView == null || gridView.GridModel == null)
+            if (!hasTarget || markerRect == null)
                 return;
 
-            UpdatePlayerMarker();
-        }
-
-        private void UpdatePlayerMarker()
-        {
-            MinimapGridModel gridModel = gridView.GridModel;
-
-            // Convert player world position to grid position
-            currentGridPosition = GridCoordinateConverter.WorldToGrid(
-                playerTransform.position,
-                gridModel.GridOrigin,
-                gridModel.CellSize
-            );
-
-            // Only update if position changed
-            if (currentGridPosition != previousGridPosition)
+            if (smoothMovement)
             {
-                UpdateMarkerPosition();
-                previousGridPosition = currentGridPosition;
+                markerRect.position = Vector3.Lerp(
+                    markerRect.position,
+                    targetPosition,
+                    Time.deltaTime * smoothSpeed
+                );
             }
         }
 
-        private void UpdateMarkerPosition()
+        private void OnEnable()
         {
-            MinimapCellView cellView = gridView.GetCellView(currentGridPosition);
-            if (cellView != null)
+            if (viewModel == null)
             {
-                RectTransform targetRect = cellView.GetComponent<RectTransform>();
-                if (targetRect != null && markerRect != null)
+                viewModel = FindFirstObjectByType<MinimapGridViewModel>();
+            }
+
+            if (gridView == null)
+            {
+                gridView = GetComponentInParent<MinimapGridView>();
+            }
+
+            if (viewModel == null || gridView == null)
+            {
+                Debug.LogError("[MinimapPlayerMarkerView] Missing ViewModel or GridView reference!");
+                return;
+            }
+
+            viewModel.PlayerViewPositionChanged += UpdateMarkerPosition;
+            viewModel.ViewportDataChanged += OnViewportDataChanged;
+            viewModel.ForceRefresh();
+        }
+
+        private void OnDisable()
+        {
+            if (viewModel != null)
+            {
+                viewModel.PlayerViewPositionChanged -= UpdateMarkerPosition;
+                viewModel.ViewportDataChanged -= OnViewportDataChanged;
+            }
+        }
+
+        private void OnViewportDataChanged(MinimapViewportData data)
+        {
+            if (data == null || !hideOnWall)
+                return;
+
+            // Hide marker when player is on Wall
+            if (data.PlayerCellType == CellType.Wall)
+            {
+                if (markerImage != null)
                 {
-                    if (smoothMovement)
-                    {
-                        // Smooth movement
-                        markerRect.position = Vector3.Lerp(
-                            markerRect.position,
-                            targetRect.position,
-                            Time.deltaTime * smoothSpeed
-                        );
-                    }
-                    else
-                    {
-                        // Instant movement
-                        markerRect.position = targetRect.position;
-                    }
+                    markerImage.enabled = false;
                 }
+                hasTarget = false;
             }
         }
 
-        public void SetPlayerTransform(Transform player)
+        private void UpdateMarkerPosition(Vector2Int viewPosition)
         {
-            playerTransform = player;
+            if (gridView == null)
+                return;
+
+            if (viewPosition.x < 0 || viewPosition.y < 0)
+            {
+                hasTarget = false;
+                if (markerImage != null)
+                {
+                    markerImage.enabled = false;
+                }
+                return;
+            }
+
+            MinimapCellView cellView = gridView.GetCellView(viewPosition.x, viewPosition.y);
+            if (cellView == null)
+                return;
+
+            RectTransform targetRect = cellView.GetComponent<RectTransform>();
+            if (targetRect == null || markerRect == null)
+                return;
+
+            targetPosition = targetRect.position;
+            hasTarget = true;
+
+            if (markerImage != null)
+            {
+                markerImage.enabled = true;
+            }
+
+            if (!smoothMovement)
+            {
+                markerRect.position = targetPosition;
+            }
         }
 
         public void SetGridView(MinimapGridView view)
         {
             gridView = view;
+        }
+
+        public void SetViewModel(MinimapGridViewModel model)
+        {
+            viewModel = model;
         }
 
         public void SetColorConfig(MinimapColorConfig config)

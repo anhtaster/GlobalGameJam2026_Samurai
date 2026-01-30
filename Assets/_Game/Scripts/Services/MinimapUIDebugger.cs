@@ -16,7 +16,7 @@ namespace GlobalGameJam
             // Check Canvas
             if (canvas == null)
             {
-                canvas = FindObjectOfType<Canvas>();
+                canvas = FindFirstObjectByType<Canvas>();
             }
 
             if (canvas != null)
@@ -39,7 +39,6 @@ namespace GlobalGameJam
             }
 
             Debug.Log($"✅ GridView found: {gridView.name}");
-            Debug.Log($"   Grid Model assigned: {gridView.GridModel != null}");
             Debug.Log($"   Color Config assigned: {gridView.ColorConfig != null}");
 
             // Check cell count
@@ -48,7 +47,7 @@ namespace GlobalGameJam
 
             if (cellCount == 0)
             {
-                Debug.LogWarning("⚠️ No cells found! GridView.GenerateGrid() not called?");
+                Debug.LogWarning("⚠️ No cells found! GridView.GenerateGrid(width,height) not called?");
             }
             else
             {
