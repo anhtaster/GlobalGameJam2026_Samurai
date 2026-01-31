@@ -9,10 +9,13 @@ namespace GlobalGameJam
         [SerializeField] private MinimapGridModel gridModel;
         [SerializeField] private WallToggleService wallToggleService;
         [SerializeField] private MinimapGhostLayer ghostLayer;
+        [SerializeField] private MapController mapController;
         
         [Header("Texture Mode")]
         [SerializeField] private MinimapTextureRenderer textureRenderer;
         [SerializeField] private RectTransform mapContainer;
+
+
         
         [Header("Legacy Mode (optional)")]
         [SerializeField] private MinimapGridView gridView;
@@ -36,7 +39,20 @@ namespace GlobalGameJam
 
         private void Start()
         {
+            if (mapController == null)
+                mapController = GetComponent<MapController>();
+
+            if (mapController == null)
+                mapController = GetComponentInChildren<MapController>();
+
+            if (mapController == null)
+                mapController = GetComponentInParent<MapController>();
+
+            if (mapController == null)
+                mapController = FindObjectOfType<MapController>();
+
             useTextureMode = textureRenderer != null;
+
             
             if (ghostLayer != null)
                 ghostLayer.SetVisible(false);
@@ -44,6 +60,7 @@ namespace GlobalGameJam
             if (playerInput == null && (scriptsToDisable == null || scriptsToDisable.Length == 0))
             {
             }
+
             
             // Initialize cursor to center of grid
             if (gridModel != null)
@@ -59,10 +76,13 @@ namespace GlobalGameJam
 
         private void HandleInput()
         {
-            // Toggle Map Mode
-            if (Keyboard.current != null && Keyboard.current.mKey.wasPressedThisFrame)
+            if (Keyboard.current != null)
             {
-                ToggleMapMode();
+                // Toggle on each press
+                if (Keyboard.current.mKey.wasPressedThisFrame)
+                {
+                    SetMapMode(!isMapMode);
+                }
             }
 
             if (!isMapMode) return;
@@ -110,12 +130,14 @@ namespace GlobalGameJam
             }
         }
 
-        private void ToggleMapMode()
+        private void SetMapMode(bool enabled)
         {
-            isMapMode = !isMapMode;
+            if (isMapMode == enabled) return;
+            isMapMode = enabled;
 
             if (isMapMode)
             {
+                if (mapController != null) mapController.OpenMapExternal();
                 if (playerInput != null) playerInput.DeactivateInput();
                 foreach (var script in scriptsToDisable) if (script != null) script.enabled = false;
                 
@@ -127,6 +149,7 @@ namespace GlobalGameJam
             }
             else
             {
+                if (mapController != null) mapController.CloseMapExternal();
                 if (playerInput != null) playerInput.ActivateInput();
                 foreach (var script in scriptsToDisable) if (script != null) script.enabled = true;
 
