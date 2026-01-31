@@ -35,6 +35,10 @@ namespace GlobalGameJam
         [SerializeField] private bool invertInputX = false;
         [SerializeField] private bool invertInputY = false;
 
+        [Header("Pause Settings")]
+        [SerializeField] private GameObject pausePanel; 
+        private bool isPaused = false;
+
         private bool isMapMode = false;
         private bool useTextureMode = false;
 
@@ -75,8 +79,43 @@ namespace GlobalGameJam
 
         private void Update()
         {
+            if (Keyboard.current != null && (Keyboard.current.escapeKey.wasPressedThisFrame || Keyboard.current.pKey.wasPressedThisFrame))
+            {
+                SetPauseMode(!isPaused);
+            }
+
+            if (isPaused) return;
+
             HandleInput();
         }
+
+        public void SetPauseMode(bool enabled)
+        {
+            if (isPaused == enabled) return;
+            isPaused = enabled;
+
+            // Cập nhật biến static để Script Menu biết đường mà chạy
+            PausePanelController.IsPaused = enabled; 
+
+            if (pausePanel != null) pausePanel.SetActive(isPaused);
+
+            if (isPaused)
+            {
+                if (playerInput != null) playerInput.DeactivateInput();
+                foreach (var script in scriptsToDisable) if (script != null) script.enabled = false;
+                Time.timeScale = 0f;
+
+                // Ép Menu cập nhật vị trí mũi tên ngay khi vừa mở
+                var menu = pausePanel.GetComponent<PausePanelController>();
+                if (menu != null) menu.ResetMenu(); 
+            }
+            else
+            {
+                if (playerInput != null) playerInput.ActivateInput();
+                foreach (var script in scriptsToDisable) if (script != null) script.enabled = true;
+                Time.timeScale = 1f;
+            }
+}
 
         private void HandleInput()
         {
