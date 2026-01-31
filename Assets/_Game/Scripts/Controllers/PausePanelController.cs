@@ -4,6 +4,10 @@ using TMPro; // Nếu bạn dùng TextMeshPro
 
 public class PausePanelController : MonoBehaviour
 {
+    [Header("Visual Settings")]
+    public Color selectedColor = Color.white;
+    public Color unselectedColor = new Color(1f, 1f, 1f, 0.4f);
+
     [Header("UI Elements")]
     public RectTransform[] menuOptions; // Kéo 3 cái Text vào đây
     public RectTransform leftArrow;     // Kéo mũi tên bên trái vào đây
@@ -69,48 +73,44 @@ public class PausePanelController : MonoBehaviour
     {
         if (menuOptions == null || menuOptions.Length == 0) return;
 
-        // 1. Lấy mục đang chọn
-        RectTransform selectedRect = menuOptions[currentIndex];
-        
-        // 2. Lấy component TextMeshPro để đo độ rộng thực tế của chữ
-        var tmpText = selectedRect.GetComponent<TextMeshProUGUI>();
-        float actualTextWidth;
-
-        if (tmpText != null)
+        for (int i = 0; i < menuOptions.Length; i++)
         {
-            // preferredWidth lấy độ rộng thật của chữ, không tính phần trống của khung
-            actualTextWidth = tmpText.preferredWidth;
-        }
-        else
-        {
-            actualTextWidth = selectedRect.rect.width;
-        }
+            var tmpText = menuOptions[i].GetComponent<TextMeshProUGUI>();
+            if (i == currentIndex)
+            {
+                // Mục được chọn: Sáng và To
+                if (tmpText != null) tmpText.color = selectedColor;
+                menuOptions[i].localScale = Vector3.one * 1.2f;
 
-        // 3. Tính toán vị trí dựa trên Scale của chính nó
-        float finalWidth = actualTextWidth * selectedRect.localScale.x;
-        Vector3 targetPos = selectedRect.localPosition;
-
-        // 4. Cập nhật vị trí mũi tên (Dùng padding để điều chỉnh khoảng cách xa gần tùy ý)
-        leftArrow.localPosition = new Vector3(targetPos.x - (finalWidth / 2f) - padding, targetPos.y, targetPos.z);
-        rightArrow.localPosition = new Vector3(targetPos.x + (finalWidth / 2f) + padding, targetPos.y, targetPos.z);
+                // Di chuyển mũi tên (giữ nguyên logic cũ của bạn)
+                float finalWidth = (tmpText != null ? tmpText.preferredWidth : menuOptions[i].rect.width) * menuOptions[i].localScale.x;
+                leftArrow.localPosition = new Vector3(menuOptions[i].localPosition.x - (finalWidth / 2f) - padding, menuOptions[i].localPosition.y, 0);
+                rightArrow.localPosition = new Vector3(menuOptions[i].localPosition.x + (finalWidth / 2f) + padding, menuOptions[i].localPosition.y, 0);
+            }
+            else
+            {
+                // Mục không được chọn: Mờ và Nhỏ
+                if (tmpText != null) tmpText.color = unselectedColor;
+                menuOptions[i].localScale = Vector3.one;
+            }
+        }
     }
 
     void ConfirmSelection()
     {
-        // Index 0: Resume
-        if (currentIndex == 0) 
+        var master = FindFirstObjectByType<GlobalGameJam.MinimapInteractionController>();
+        if (master == null) return;
+
+        if (currentIndex == 0) // Resume
         {
-            TogglePause(); // Tắt pause và chạy tiếp game
+            master.SetPauseMode(false);
         }
-        // Index 1: Setting
-        else if (currentIndex == 1) 
+        else if (currentIndex == 1) // Setting
         {
-            pausePanel.SetActive(false);    // Ẩn pause panel
-            settingsPanel.SetActive(true);  // Hiện setting panel
-            // Lưu ý: Vẫn giữ IsPaused = true và Time.timeScale = 0
+            // GỌI HÀM NÀY: Nó sẽ xử lý tắt Pause, bật Setting và cắm cờ logic
+            master.EnterSettingFromPause(); 
         }
-        // Index 2: Main Menu
-        else if (currentIndex == 2) 
+        else if (currentIndex == 2) // Main Menu
         {
             pausePanel.SetActive(false);
             mainMenuPanel.SetActive(true);

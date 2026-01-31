@@ -5822,8 +5822,8 @@ MonoBehaviour:
   navigationCooldown: 0.15
   invertInputX: 0
   invertInputY: 0
-  pausePanel: {fileID: 0}
-  settingController: {fileID: 0}
+  pausePanel: {fileID: 1392835282}
+  settingController: {fileID: 924603046}
 --- !u!4 &292998785
 Transform:
   m_ObjectHideFlags: 0
@@ -15567,19 +15567,23 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 539043884290963425, guid: 2663d02ce7cf64d48b11892160f6abe5, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 772463038515490577, guid: 2663d02ce7cf64d48b11892160f6abe5, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1048280479711342130, guid: 2663d02ce7cf64d48b11892160f6abe5, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2908044187820315000, guid: 2663d02ce7cf64d48b11892160f6abe5, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 1
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3061685148327956968, guid: 2663d02ce7cf64d48b11892160f6abe5, type: 3}
+      propertyPath: m_PresetInfoIsWorld
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3226402146783982840, guid: 2663d02ce7cf64d48b11892160f6abe5, type: 3}
       propertyPath: m_Pivot.x
@@ -15663,11 +15667,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5600622106350606026, guid: 2663d02ce7cf64d48b11892160f6abe5, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6215364264773309434, guid: 2663d02ce7cf64d48b11892160f6abe5, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7505894577105266916, guid: 2663d02ce7cf64d48b11892160f6abe5, type: 3}
       propertyPath: m_Name
@@ -15679,10 +15683,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8632693501099883053, guid: 2663d02ce7cf64d48b11892160f6abe5, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 8739887387204840853, guid: 2663d02ce7cf64d48b11892160f6abe5, type: 3}
-      propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
@@ -20367,6 +20367,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 5062c1312f2beb14694d90a058d444e4, type: 3}
+--- !u!114 &924603046 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4186247875749429709, guid: 2663d02ce7cf64d48b11892160f6abe5, type: 3}
+  m_PrefabInstance: {fileID: 702026434}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a178ebef89a5e2f42b4b8564ed2a1684, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SettingsPanelController
 --- !u!1001 &924918026
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -27948,6 +27959,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 98f5378049f9b5745a77677f581b32b1, type: 3}
+--- !u!1 &1392835282 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7583040347163764539, guid: 2663d02ce7cf64d48b11892160f6abe5, type: 3}
+  m_PrefabInstance: {fileID: 702026434}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1393323554
 PrefabInstance:
   m_ObjectHideFlags: 0

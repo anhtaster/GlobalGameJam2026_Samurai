@@ -65,6 +65,11 @@ namespace GlobalGameJam
 
             useTextureMode = textureRenderer != null;
 
+            if (settingController == null)
+            {
+                settingController = GetComponentInChildren<SettingPanelController>(true);
+            }
+
             
             if (ghostLayer != null)
                 ghostLayer.SetVisible(false);
@@ -83,22 +88,14 @@ namespace GlobalGameJam
 
         private void Update()
         {
-            // 1. Ưu tiên kiểm tra phím C (Setting)
-            if (Keyboard.current != null && Keyboard.current.cKey.wasPressedThisFrame)
-            {
-                ToggleSettingMode();
-            }
+            if (Keyboard.current == null) return;
 
-            // 2. Kiểm tra phím Pause (ESC/P) - Chỉ cho phép nếu KHÔNG đang mở Setting
-            if (!isSetting && Keyboard.current != null && 
-            (Keyboard.current.escapeKey.wasPressedThisFrame || Keyboard.current.pKey.wasPressedThisFrame))
+            if (!isSetting && Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
             {
                 SetPauseMode(!isPaused);
             }
 
-            // Nếu đang Pause HOẶC đang Setting thì dừng mọi logic bên dưới (di chuyển, map...)
             if (isPaused || isSetting) return;
-
             HandleInput();
         }
 
@@ -269,39 +266,84 @@ namespace GlobalGameJam
             }
         }
 
+        // private void ToggleSettingMode()
+        // {
+        //     isSetting = !isSetting;
+            
+        //     // Gọi hàm thực thi bên script Setting
+        //     if (settingController != null)
+        //     {
+        //         // Chúng ta sẽ sửa hàm ToggleSettings bên kia để nhận tham số trực tiếp
+        //         settingController.SetPanelActive(isSetting);
+        //     }
+
+        //     // Khóa/Mở khóa các script điều khiển người chơi & góc nhìn
+        //     if (isSetting)
+        //     {
+        //         if (playerInput != null) playerInput.DeactivateInput();
+        //         foreach (var script in scriptsToDisable) if (script != null) script.enabled = false;
+                
+        //         Time.timeScale = 0f;
+        //         Cursor.lockState = CursorLockMode.None;
+        //         Cursor.visible = true;
+        //     }
+        //     else
+        //     {
+        //         // Chỉ kích hoạt lại nếu cũng không bị Pause
+        //         if (!isPaused)
+        //         {
+        //             if (playerInput != null) playerInput.ActivateInput();
+        //             foreach (var script in scriptsToDisable) if (script != null) script.enabled = true;
+                    
+        //             Time.timeScale = 1f;
+        //             Cursor.lockState = CursorLockMode.Locked;
+        //             Cursor.visible = false;
+        //         }
+        //     }
+        // }
+
         private void ToggleSettingMode()
         {
             isSetting = !isSetting;
             
-            // Gọi hàm thực thi bên script Setting
             if (settingController != null)
             {
-                // Chúng ta sẽ sửa hàm ToggleSettings bên kia để nhận tham số trực tiếp
                 settingController.SetPanelActive(isSetting);
             }
 
-            // Khóa/Mở khóa các script điều khiển người chơi & góc nhìn
+            // Quan trọng: Khi đang Setting, phải chặn HandleInput() của Gameplay
             if (isSetting)
             {
                 if (playerInput != null) playerInput.DeactivateInput();
-                foreach (var script in scriptsToDisable) if (script != null) script.enabled = false;
-                
                 Time.timeScale = 0f;
-                Cursor.lockState = CursorLockMode.None;
-                Cursor.visible = true;
             }
-            else
+        }
+
+        public void EnterSettingFromPause()
+        {
+            isSetting = true;   // Kích hoạt chế độ Setting
+            isPaused = false;    // Tạm thời tắt cờ IsPaused để logic Update của Controller không nhận Esc nữa
+            
+            if (pausePanel != null) pausePanel.SetActive(false);
+            
+            if (settingController != null)
             {
-                // Chỉ kích hoạt lại nếu cũng không bị Pause
-                if (!isPaused)
-                {
-                    if (playerInput != null) playerInput.ActivateInput();
-                    foreach (var script in scriptsToDisable) if (script != null) script.enabled = true;
-                    
-                    Time.timeScale = 1f;
-                    Cursor.lockState = CursorLockMode.Locked;
-                    Cursor.visible = false;
-                }
+                // Gọi SetPanelActive(true) để bật cả GameObject và biến isOpen bên kia
+                settingController.SetPanelActive(true);
+            }
+        }
+
+        public void ExitSettingToPause()
+        {
+            isSetting = false; // Tắt cờ Setting
+            isPaused = true;   // Bật lại cờ Pause để phím Esc hoạt động lại
+
+            if (pausePanel != null)
+            {
+                pausePanel.SetActive(true);
+                // Reset lại vị trí mũi tên ở Menu Pause
+                var menu = pausePanel.GetComponent<PausePanelController>();
+                if (menu != null) menu.ResetMenu();
             }
         }
     }
