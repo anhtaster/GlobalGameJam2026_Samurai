@@ -18,6 +18,7 @@ namespace GlobalGameJam
 
         [Header("Cross-Controller References")]
         [SerializeField] private MapController mapController;
+        [SerializeField] private ColorGroupController colorGroupController;
 
         private Animator animator;
         private GlassesViewModel viewModel;
@@ -55,6 +56,12 @@ namespace GlobalGameJam
             if (mapController == null)
             {
                 mapController = FindFirstObjectByType<MapController>();
+            }
+
+            // Tìm ColorGroupController nếu chưa gán
+            if (colorGroupController == null)
+            {
+                colorGroupController = FindFirstObjectByType<ColorGroupController>();
             }
 
             // Tạo ViewModel từ Model
@@ -124,12 +131,18 @@ namespace GlobalGameJam
         /// </summary>
         private void HandlePutOnGlasses()
         {
-            // Debug.Log("[GlassesController] Putting on glasses");
+            Debug.Log("[GlassesController] ✓ PUTTING ON GLASSES - Now wearing glasses");
             
             if (animator != null)
             {
                 animator.SetTrigger(putOnGlassesTrigger);
                 animator.SetBool(wearingGlassesBool, true);
+            }
+
+            // Notify color block controller to restore saved state
+            if (colorGroupController != null)
+            {
+                colorGroupController.OnGlassesPutOn();
             }
         }
 
@@ -138,12 +151,18 @@ namespace GlobalGameJam
         /// </summary>
         private void HandlePutOutGlasses()
         {
-            // Debug.Log("[GlassesController] Taking off glasses");
+            Debug.Log("[GlassesController] ✗ TAKING OFF GLASSES - No longer wearing glasses");
             
             if (animator != null)
             {
                 animator.SetTrigger(putOutGlassesTrigger);
                 animator.SetBool(wearingGlassesBool, false);
+            }
+
+            // Notify color block controller to hide all blocks
+            if (colorGroupController != null)
+            {
+                colorGroupController.OnGlassesPutOff();
             }
         }
 
