@@ -39,7 +39,6 @@ namespace GlobalGameJam
         private List<ColoredPlatform> allPlatforms = new List<ColoredPlatform>();
         private ColorBlockViewModel viewModel;
         private GlassColor currentGlassColor = GlassColor.Red;
-        private bool isWearingGlasses = false;
 
         void Start()
         {
@@ -254,7 +253,6 @@ namespace GlobalGameJam
         /// </summary>
         public void OnGlassesPutOn(GlassColor glassColor)
         {
-            isWearingGlasses = true;
             currentGlassColor = glassColor;
 
             if (showDebugLogs)
@@ -294,8 +292,6 @@ namespace GlobalGameJam
         /// </summary>
         public void OnGlassesPutOff()
         {
-            isWearingGlasses = false;
-
             if (showDebugLogs)
             {
                 Debug.Log("[ColorGroupController] Glasses OFF - hiding all platforms");

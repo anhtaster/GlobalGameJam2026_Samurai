@@ -19,10 +19,8 @@ namespace GlobalGameJam
         [SerializeField] private GameObject mapObject; // Reference đến map 3D model (nhắc trong Editor)
         [SerializeField] private string mapObjectNameHint = "Map";
         [SerializeField] private string[] mapObjectNameHints = new[] { "Map", "Paper", "MapPaper", "Map_Paper" };
-        [SerializeField] private bool forceMapVisibleInLevel2 = false;
         [SerializeField] private bool forceMapLayerToDefault = false;
         [SerializeField] private bool forceTreatAsLevel2 = false;
-        [SerializeField] private bool forceHideMapInTutorial = false;
 
         [Header("Cross-Controller References")]
         [SerializeField] private GlassesController glassesController;

@@ -34850,13 +34850,15 @@ MonoBehaviour:
   putAwayMapTrigger: PutAwayMap
   zoomInMapTrigger: ZoomInMap
   zoomOutMapTrigger: ZoomOutMap
-  mapObject: {fileID: 1419181515}
+  mapObject: {fileID: 0}
   mapObjectNameHint: Map
-  mapObjectNameHints: []
-  forceMapVisibleInLevel2: 1
-  forceMapLayerToDefault: 1
+  mapObjectNameHints:
+  - Map
+  - Paper
+  - MapPaper
+  - Map_Paper
+  forceMapLayerToDefault: 0
   forceTreatAsLevel2: 0
-  forceHideMapInTutorial: 0
   glassesController: {fileID: 0}
 --- !u!4 &1324208532
 Transform:
@@ -37671,11 +37673,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 4.232, y: 7.992, z: -88.683}
---- !u!1 &1419181515 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 1e5e606d43834e94cac6ff2af2018cf5, type: 3}
-  m_PrefabInstance: {fileID: 1784553338}
-  m_PrefabAsset: {fileID: 0}
 --- !u!4 &1419181518 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 1e5e606d43834e94cac6ff2af2018cf5, type: 3}
