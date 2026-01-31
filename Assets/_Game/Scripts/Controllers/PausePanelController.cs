@@ -112,8 +112,13 @@ public class PausePanelController : MonoBehaviour
         }
         else if (currentIndex == 2) // Main Menu
         {
-            pausePanel.SetActive(false);
-            mainMenuPanel.SetActive(true);
+            this.gameObject.SetActive(false); // Ẩn Pause Panel
+            if (mainMenuPanel != null) 
+            {
+                mainMenuPanel.SetActive(true);
+                var mainMenuCtrl = mainMenuPanel.GetComponent<MainMenuController>();
+                if (mainMenuCtrl != null) mainMenuCtrl.SetMenuActive(true);
+            }
         }
     }
 
