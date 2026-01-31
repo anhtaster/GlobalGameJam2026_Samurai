@@ -69,7 +69,7 @@ namespace GlobalGameJam
                 var cell = gridModel.GetCell(gridPos);
                 if (cell != null)
                 {
-                    var colorConfig = FindObjectOfType<MinimapColorConfig>();
+                    var colorConfig = FindFirstObjectByType<MinimapColorConfig>();
                     if (colorConfig != null)
                     {
                         Color32 originalColor = colorConfig.GetColorForCellType(cell.CellType);

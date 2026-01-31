@@ -98,7 +98,7 @@ public class IntroCutscene : MonoBehaviour
         else
         {
             // Try to find it if not assigned
-            playerController = FindObjectOfType<StarterAssets.FirstPersonController>();
+            playerController = FindFirstObjectByType<StarterAssets.FirstPersonController>();
             if (playerController != null)
             {
                  playerController.enabled = false;

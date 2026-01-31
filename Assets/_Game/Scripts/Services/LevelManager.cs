@@ -3,7 +3,9 @@ using UnityEngine.SceneManagement;
 using System.Collections;
 using System;
 
-public class LevelManager : MonoBehaviour
+namespace GlobalGameJam
+{
+    public class LevelManager : MonoBehaviour
 {
     public static LevelManager Instance { get; private set; }
 
@@ -84,4 +86,5 @@ public class LevelManager : MonoBehaviour
             Debug.LogWarning($"[LevelManager] No next scene found! Current index: {currentSceneIndex}");
         }
     }
+}
 }

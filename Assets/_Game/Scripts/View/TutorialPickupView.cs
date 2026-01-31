@@ -45,7 +45,7 @@ namespace GlobalGameJam
             // Auto-find ViewModel if not assigned
             if (progressionViewModel == null)
             {
-                progressionViewModel = FindObjectOfType<TutorialProgressionViewModel>();
+                progressionViewModel = FindFirstObjectByType<TutorialProgressionViewModel>();
             }
 
             if (progressionViewModel == null)
@@ -56,7 +56,7 @@ namespace GlobalGameJam
             // Auto-find MinimapPickupMarker if not assigned
             if (minimapMarker == null)
             {
-                minimapMarker = FindObjectOfType<MinimapPickupMarker>();
+                minimapMarker = FindFirstObjectByType<MinimapPickupMarker>();
             }
 
             // Subscribe to unlock events for sequential marker appearance

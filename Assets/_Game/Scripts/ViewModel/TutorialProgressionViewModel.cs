@@ -57,7 +57,7 @@ namespace GlobalGameJam
             // Reset progress at start (for testing/new game)
             model.ResetProgress();
 
-            // Hide minimap initially
+            // Hide minimap initially (chờ nhặt item)
             if (minimapPanel != null)
             {
                 minimapPanel.SetActive(false);
@@ -91,6 +91,13 @@ namespace GlobalGameJam
                 if (minimapPanel != null)
                 {
                     minimapPanel.SetActive(true);
+                }
+
+                // Hiển thị map 3D object và trigger animation lấy map
+                MapController mapController = FindFirstObjectByType<MapController>();
+                if (mapController != null)
+                {
+                    mapController.ShowMapForFirstTime();
                 }
 
                 // Play narrator

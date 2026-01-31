@@ -38,6 +38,10 @@ namespace GlobalGameJam
             if (levelManager == null)
             {
                 levelManager = FindFirstObjectByType<LevelManager>();
+                if (levelManager == null)
+                {
+                    Debug.LogWarning("[SceneTransitionManager] LevelManager not found in scene. Will attempt to use static Instance at runtime.");
+                }
             }
 
             // Setup fade image
@@ -81,13 +85,29 @@ namespace GlobalGameJam
             }
 
             // Load next level
-            if (levelManager != null && loadNextLevel)
+            if (levelManager != null)
             {
                 levelManager.LoadNextLevel();
             }
+            else if (LevelManager.Instance != null)
+            {
+                LevelManager.Instance.LoadNextLevel();
+            }
             else
             {
-                Debug.LogWarning("[SceneTransitionManager] LevelManager not found, cannot load next level!");
+                Debug.LogWarning("[SceneTransitionManager] LevelManager not found! Attempting direct scene load.");
+                // Fallback: load next scene by build index
+                int currentSceneIndex = UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex;
+                int nextSceneIndex = currentSceneIndex + 1;
+                
+                if (nextSceneIndex < UnityEngine.SceneManagement.SceneManager.sceneCountInBuildSettings)
+                {
+                    UnityEngine.SceneManagement.SceneManager.LoadScene(nextSceneIndex);
+                }
+                else
+                {
+                    Debug.LogError("[SceneTransitionManager] No next scene in build settings!");
+                }
             }
         }
 
@@ -111,6 +131,10 @@ namespace GlobalGameJam
             if (levelManager != null)
             {
                 levelManager.LoadLevel(levelName);
+            }
+            else if (LevelManager.Instance != null)
+            {
+                LevelManager.Instance.LoadLevel(levelName);
             }
             else
             {
