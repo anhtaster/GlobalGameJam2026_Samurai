@@ -15,8 +15,9 @@ namespace GlobalGameJam
         private RectTransform ghostRect;
         private Image ghostImage;
         private Vector2Int currentGridPos;
+        private bool isLocked = false;
 
-        public MinimapGridModel GridModel => gridView != null ? gridView.GridModel : null;
+        public MinimapGridModel GridModel => gridView != null ? gridView.GridModel : null;  
 
         public int MaskSize => maskSize;
 
@@ -52,6 +53,7 @@ namespace GlobalGameJam
 
         public void SetState(bool isActiveRegion)
         {
+            isLocked = isActiveRegion; 
             if (ghostImage != null)
                 ghostImage.color = isActiveRegion ? activeColor : maskColor;
         }
@@ -59,6 +61,7 @@ namespace GlobalGameJam
         public void UpdateCursorPosition(Vector2Int centerGridPos, float cellSize)
         {
             if (ghostRect == null || gridView == null) return;
+            if (isLocked || ghostRect == null || gridView == null) return;
 
             currentGridPos = centerGridPos;
 

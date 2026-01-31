@@ -19,6 +19,9 @@ namespace GlobalGameJam
         [SerializeField] private int viewportWidth = 12;
         [SerializeField] private int viewportHeight = 12;
 
+        [Header("Ghost Settings")]
+        [SerializeField] private MinimapGhostLayer ghostLayer;
+
         [Header("Rotation Settings")]
         [SerializeField] private Transform rotationTarget; // Assign the Grid Container here
 
@@ -33,6 +36,7 @@ namespace GlobalGameJam
         private void Update()
         {
             RotateMinimap();
+            HandleGhostInput(); 
         }
 
         private void RotateMinimap()
@@ -150,6 +154,50 @@ namespace GlobalGameJam
         {
             if (gridModel == null) return "No Model";
             return $"{viewportWidth}x{viewportHeight} Viewport active";
+        }
+
+        private Vector2Int GetMouseGridPosition()
+        {
+            if (gridView == null) return Vector2Int.zero;
+
+            RectTransform rect = gridView.GetComponent<RectTransform>();
+            
+            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(rect, Input.mousePosition, null, out Vector2 localPoint))
+            {
+                float width = rect.rect.width;
+                float height = rect.rect.height;
+
+                int x = Mathf.FloorToInt((localPoint.x + (width / 2)) / gridView.CellUISize);
+                int y = Mathf.FloorToInt(((height / 2) - localPoint.y) / gridView.CellUISize);
+
+                x = Mathf.Clamp(x, 0, viewportWidth - 1);
+                y = Mathf.Clamp(y, 0, viewportHeight - 1);
+
+                return new Vector2Int(x, y);
+            }
+
+            return Vector2Int.zero;
+        }
+
+        private void HandleGhostInput()
+        {
+            if (ghostLayer == null || gridView == null) return;
+
+            if (Input.GetMouseButtonDown(0))
+            {
+                ghostLayer.SetState(true);
+            }
+
+            if (Input.GetMouseButtonUp(0))
+            {
+                ghostLayer.SetState(false);
+            }
+
+            if (!Input.GetMouseButton(0))
+            {
+                Vector2Int mouseGridPos = GetMouseGridPosition(); 
+                ghostLayer.UpdateCursorPosition(mouseGridPos, gridView.CellUISize);
+            }
         }
     }
 }
