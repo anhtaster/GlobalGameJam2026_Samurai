@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace GlobalGameJam
@@ -24,6 +25,8 @@ namespace GlobalGameJam
 
         [Header("Rotation Settings")]
         [SerializeField] private Transform rotationTarget; // Assign the Grid Container here
+
+        private List<Vector2Int> highlightedPositions = new List<Vector2Int>();
 
         public event Action<Vector2Int> PlayerViewPositionChanged;
         public event Action<MinimapViewportData> ViewportDataChanged;
@@ -187,6 +190,7 @@ namespace GlobalGameJam
             if (Input.GetMouseButtonUp(0))
             {
                 ghostLayer.SetState(false);
+                ClearAllHighlights();
             }
 
             if (!Input.GetMouseButton(0))
@@ -194,6 +198,18 @@ namespace GlobalGameJam
                 Vector2Int mouseGridPos = GetMouseGridPosition(); 
                 ghostLayer.UpdateCursorPosition(mouseGridPos, gridView.CellUISize);
             }
+        }
+
+        private void ClearAllHighlights()
+        {
+            if (gridView == null) return;
+
+            foreach (var pos in highlightedPositions)
+            {
+                gridView.SetCellColorOverride(pos, false, Color.white);
+            }
+            
+            highlightedPositions.Clear();
         }
     }
 }

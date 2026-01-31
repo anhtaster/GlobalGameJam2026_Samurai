@@ -91,6 +91,11 @@ namespace GlobalGameJam
                 GenerateGrid(data.Width, data.Height);
             }
 
+            foreach (var cellView in cellViews.Values)
+            {
+                cellView.SetVisualOverride(false, Color.white); 
+            }
+
             // Batch update to reduce overhead
             for (int viewY = 0; viewY < data.Height; viewY++)
             {

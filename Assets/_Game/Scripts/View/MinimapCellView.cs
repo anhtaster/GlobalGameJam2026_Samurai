@@ -50,6 +50,16 @@ namespace GlobalGameJam
             // Instead, use transparent color for Empty cells (set in ColorConfig)
         }
 
+        public void ResetVisual()
+        {
+            isOverrideActive = false;
+
+            if (cellImage != null && colorConfig != null && cellData != null)
+            {
+                cellImage.color = colorConfig.GetColorForCellType(cellData.CellType);
+            }
+        }
+
         public void SetCellType(CellType type)
         {
             if (cellData == null)
