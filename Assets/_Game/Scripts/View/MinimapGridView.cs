@@ -20,6 +20,10 @@ namespace GlobalGameJam
 
         public MinimapColorConfig ColorConfig => colorConfig;
 
+        public int CurrentWidth { get; private set; }
+        public int CurrentHeight { get; private set; }
+        public float CellUISize => cellUISize;
+
         private void Awake()
         {
             if (gridLayout == null)
@@ -52,6 +56,9 @@ namespace GlobalGameJam
 
             // Setup grid layout with custom size
             SetupGridLayout(width);
+
+            CurrentWidth = width;
+            CurrentHeight = height;
 
             // Create cell views with custom size
             // Important: Store cells by VISUAL position (viewX, viewY) not grid position
@@ -201,6 +208,36 @@ namespace GlobalGameJam
         private void OnDestroy()
         {
             ClearGrid();
+        }
+
+        public void SetCellColorOverride(Vector2Int gridPos, bool active, Color color)
+        {
+            // First, try direct lookup (Local Coordinate)
+            MinimapCellView cellView = GetCellView(gridPos);
+            
+            // If not found, it might be a World Coordinate (from WallToggleService). 
+            // Iterate to find the matching Viewport Cell.
+            if (cellView == null)
+            {
+                foreach (var view in cellViews.Values)
+                {
+                    if (view.WorldGridPosition == gridPos)
+                    {
+                        cellView = view;
+                        break;
+                    }
+                }
+            }
+
+            if (cellView != null)
+            {
+                cellView.SetVisualOverride(active, color);
+            }
+            else
+            {
+                // Commented out log to avoid spam if target is outside Viewport
+                // Debug.LogWarning($"[MinimapGridView] SetCellColorOverride failed: No View found for {gridPos}");
+            }
         }
     }
 }
