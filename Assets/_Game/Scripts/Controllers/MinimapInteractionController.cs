@@ -82,12 +82,6 @@ namespace GlobalGameJam
         {
             if (Keyboard.current != null)
             {
-                // Toggle on each press
-                if (Keyboard.current.mKey.wasPressedThisFrame)
-                {
-                    SetMapMode(!isMapMode);
-                }
-
                 if (Keyboard.current.eKey.wasPressedThisFrame)
                 {
                     if (isMapMode)

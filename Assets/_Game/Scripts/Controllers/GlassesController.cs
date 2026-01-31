@@ -97,21 +97,6 @@ namespace GlobalGameJam
             // Bấm T để toggle kính
             if (Keyboard.current.tKey.wasPressedThisFrame)
             {
-                // Không cho bấm T khi đang mở map
-                if (mapController != null && animator != null)
-                {
-                    AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
-                    
-                    // Check nếu đang trong map animation thì không cho toggle glasses
-                    if (stateInfo.IsName("PullOutMap") || 
-                        stateInfo.IsName("HoldingMap") || 
-                        stateInfo.IsName("PutAwayMap"))
-                    {
-                        Debug.Log("[GlassesController] Cannot toggle glasses while using map");
-                        return;
-                    }
-                }
-
                 if (viewModel != null)
                 {
                     viewModel.ToggleGlasses();

@@ -13,9 +13,18 @@ namespace GlobalGameJam
         [Header("Cross-Controller References")]
         [SerializeField] private GlassesController glassesController;
 
+        [Header("3D Map Sheet")]
+        [SerializeField] private MapSheetRenderer mapSheetRenderer;
+        [SerializeField] private float showMapDelay = 0.08f;
+
+        [Header("Mode")]
+        [SerializeField] private bool alwaysHoldingMap = true;
+
         private Animator animator;
         private bool isMapOpen = false;
         private bool isTransitioning = false;
+        private bool mapVisible = false;
+        private float showAtTime = -1f;
 
         private void Start()
         {
@@ -56,16 +65,75 @@ namespace GlobalGameJam
             {
                 glassesController = FindFirstObjectByType<GlassesController>();
             }
+
+            // Tìm MapSheetRenderer nếu chưa gán
+            if (mapSheetRenderer == null)
+            {
+                mapSheetRenderer = GetComponentInChildren<MapSheetRenderer>(true);
+            }
+
+            if (alwaysHoldingMap && animator != null)
+            {
+                animator.SetBool(holdingMapParameter, true);
+                isMapOpen = true;
+                isTransitioning = false;
+            }
         }
 
         private void Update()
         {
-            // Disabled - handled by MinimapInteractionController
+            SyncMapSheetVisibility();
+        }
+
+        private void SyncMapSheetVisibility()
+        {
+            if (mapSheetRenderer == null || animator == null) return;
+
+            bool shouldShow;
+            if (alwaysHoldingMap)
+            {
+                shouldShow = true;
+            }
+            else
+            {
+                AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
+                shouldShow = stateInfo.IsName("PullOutMap") ||
+                              stateInfo.IsName("HoldingMap") ||
+                              stateInfo.IsName("PutAwayMap");
+            }
+
+            if (shouldShow)
+            {
+                if (!mapVisible)
+                {
+                    if (showAtTime < 0f)
+                    {
+                        showAtTime = Time.time + showMapDelay;
+                    }
+
+                    if (Time.time >= showAtTime)
+                    {
+                        mapSheetRenderer.ShowMap();
+                        mapVisible = true;
+                        showAtTime = -1f;
+                    }
+                }
+            }
+            else
+            {
+                if (mapVisible)
+                {
+                    mapSheetRenderer.HideMap();
+                    mapVisible = false;
+                }
+                showAtTime = -1f;
+            }
         }
 
         // Public methods để MinimapInteractionController gọi
         public void OpenMapExternal()
         {
+            if (alwaysHoldingMap) return;
             // Không cho mở map khi đang trong glasses animation
             if (glassesController != null && animator != null)
             {
@@ -91,6 +159,7 @@ namespace GlobalGameJam
 
         public void CloseMapExternal()
         {
+            if (alwaysHoldingMap) return;
             // Không cho đóng map khi đang trong glasses animation
             if (glassesController != null && animator != null)
             {
@@ -129,6 +198,8 @@ namespace GlobalGameJam
             // Trigger PullOutMap animation
             animator.SetTrigger(pullOutMapTrigger);
 
+            // Show map sẽ được gọi từ Animation Event trong PullOutMap animation
+
             // After a short delay, set HoldingMap to true to enter the loop
             Invoke(nameof(StartHoldingMap), 0.1f);
         }
@@ -159,6 +230,8 @@ namespace GlobalGameJam
             // Trigger PutAwayMap animation
             animator.SetTrigger(putAwayMapTrigger);
 
+            // Hide map sẽ được gọi từ Animation Event trong PutAwayMap animation
+
             // Reset transition flag after animation completes
             Invoke(nameof(ResetTransition), 0.5f);
         }
@@ -166,6 +239,23 @@ namespace GlobalGameJam
         private void ResetTransition()
         {
             isTransitioning = false;
+        }
+
+        // Public methods để gọi từ Animation Events
+        public void ShowMapSheet()
+        {
+            if (mapSheetRenderer != null)
+            {
+                mapSheetRenderer.ShowMap();
+            }
+        }
+
+        public void HideMapSheet()
+        {
+            if (mapSheetRenderer != null)
+            {
+                mapSheetRenderer.HideMap();
+            }
         }
     }
 }
