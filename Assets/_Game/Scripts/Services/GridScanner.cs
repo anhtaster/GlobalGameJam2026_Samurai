@@ -87,6 +87,74 @@ namespace GlobalGameJam
         }
 
         /// <summary>
+        /// Dynamically register a single wall GameObject to the grid (for tutorial or runtime spawning)
+        /// </summary>
+        public void RegisterWall(GameObject wallObject)
+        {
+            if (wallObject == null)
+            {
+                Debug.LogWarning("[GridScanner] Cannot register null wall object!");
+                return;
+            }
+
+            if (gridModel == null)
+            {
+                Debug.LogError("[GridScanner] GridModel is not assigned!");
+                return;
+            }
+
+            // Register the wall
+            RegisterObject(wallObject, CellType.Wall);
+            
+            // Update texture renderer if available
+            MinimapTextureRenderer textureRenderer = FindFirstObjectByType<MinimapTextureRenderer>();
+            if (textureRenderer != null)
+            {
+                // Get the wall's grid positions
+                Bounds bounds = GetObjectBounds(wallObject);
+                Vector2Int minGrid = GridCoordinateConverter.WorldToGrid(bounds.min, gridOrigin, cellSize);
+                Vector2Int maxGrid = GridCoordinateConverter.WorldToGrid(bounds.max, gridOrigin, cellSize);
+
+                // Normalize for walls (same logic as in RegisterObject)
+                int widthX = maxGrid.x - minGrid.x;
+                int widthY = maxGrid.y - minGrid.y;
+                
+                if (widthX >= widthY)
+                {
+                    maxGrid.y = minGrid.y; // Horizontal wall
+                }
+                else
+                {
+                    maxGrid.x = minGrid.x; // Vertical wall
+                }
+
+                // Update all cells covered by this wall on the texture
+                for (int x = minGrid.x; x <= maxGrid.x; x++)
+                {
+                    for (int y = minGrid.y; y <= maxGrid.y; y++)
+                    {
+                        if (gridModel.IsValidGridPosition(new Vector2Int(x, y)))
+                        {
+                            var cell = gridModel.GetCell(x, y);
+                            if (cell != null)
+                            {
+                                MinimapColorConfig colorConfig = FindFirstObjectByType<MinimapColorConfig>();
+                                if (colorConfig != null)
+                                {
+                                    textureRenderer.UpdateCell(x, y, colorConfig.GetColorForCellType(cell.CellType));
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                textureRenderer.ApplyChanges();
+            }
+
+            Debug.Log($"[GridScanner] Wall '{wallObject.name}' registered to minimap at position {wallObject.transform.position}");
+        }
+
+        /// <summary>
         /// Register a GameObject to the grid
         /// </summary>
         

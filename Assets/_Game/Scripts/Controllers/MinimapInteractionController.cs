@@ -5,12 +5,18 @@ namespace GlobalGameJam
 {
     public class MinimapInteractionController : MonoBehaviour
     {
+        private void Awake()
+        {
+            Debug.Log("[MinimapInteractionController] AWAKE called - script is compiled and running!");
+        }
+        
         [Header("References")]
         [SerializeField] private MinimapGridModel gridModel;
         [SerializeField] private WallToggleService wallToggleService;
         [SerializeField] private MinimapGhostLayer ghostLayer;
         [SerializeField] private MapController mapController;
         [SerializeField] private ColorGroupController colorGroupController;
+        [SerializeField] private TutorialProgressionViewModel tutorialProgressionViewModel;
         
         [Header("Texture Mode")]
         [SerializeField] private MinimapTextureRenderer textureRenderer;
@@ -66,6 +72,9 @@ namespace GlobalGameJam
             if (colorGroupController == null)
                 colorGroupController = FindFirstObjectByType<ColorGroupController>();
 
+            if (tutorialProgressionViewModel == null)
+                tutorialProgressionViewModel = FindFirstObjectByType<TutorialProgressionViewModel>();
+
             useTextureMode = textureRenderer != null;
 
             if (settingController != null)
@@ -87,6 +96,8 @@ namespace GlobalGameJam
             {
                 currentCursorPos = new Vector2Int(gridModel.GridWidth / 2, gridModel.GridHeight / 2);
             }
+            
+            Debug.Log("[MinimapInteractionController] Script STARTED and running!");
         }
 
         public void ReturnToMainMenu()
@@ -193,6 +204,27 @@ namespace GlobalGameJam
         {
             if (Keyboard.current != null)
             {
+                // Toggle on each press
+                if (Keyboard.current.mKey.wasPressedThisFrame)
+                {
+                    Debug.Log($"[MinimapInteractionController] M key pressed! tutorialProgressionViewModel null: {tutorialProgressionViewModel == null}");
+                    
+                    // Check if MapToggle is unlocked
+                    if (tutorialProgressionViewModel != null)
+                    {
+                        Debug.Log($"[MinimapInteractionController] IsMapToggleUnlocked: {tutorialProgressionViewModel.IsMapToggleUnlocked}");
+                        
+                        if (!tutorialProgressionViewModel.IsMapToggleUnlocked)
+                        {
+                            Debug.Log("[MinimapInteractionController] Map toggle is locked! Pick up the Map Toggle item first.");
+                            return;
+                        }
+                    }
+                    
+                    Debug.Log("[MinimapInteractionController] Calling SetMapMode...");
+                    SetMapMode(!isMapMode);
+                }
+
                 if (Keyboard.current.eKey.wasPressedThisFrame)
                 {
                     if (isMapMode)

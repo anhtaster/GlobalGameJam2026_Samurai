@@ -18,6 +18,7 @@ namespace GlobalGameJam
 
         [Header("Cross-Controller References")]
         [SerializeField] private MapController mapController;
+        [SerializeField] private TutorialProgressionViewModel tutorialProgressionViewModel;
         [SerializeField] private ColorGroupController colorGroupController;
 
         private Animator animator;
@@ -56,6 +57,11 @@ namespace GlobalGameJam
             if (mapController == null)
             {
                 mapController = FindFirstObjectByType<MapController>();
+            }
+
+            if (tutorialProgressionViewModel == null)
+            {
+                tutorialProgressionViewModel = FindFirstObjectByType<TutorialProgressionViewModel>();
             }
 
             // Tìm ColorGroupController nếu chưa gán
@@ -104,6 +110,28 @@ namespace GlobalGameJam
             // Bấm T để toggle kính
             if (Keyboard.current.tKey.wasPressedThisFrame)
             {
+                // Check if Glasses is unlocked
+                if (tutorialProgressionViewModel != null && !tutorialProgressionViewModel.IsGlassesUnlocked)
+                {
+                    Debug.Log("[GlassesController] Glasses are locked! Pick up the Glasses item first.");
+                    return;
+                }
+                
+                // Không cho bấm T khi đang mở map
+                if (mapController != null && animator != null)
+                {
+                    AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
+                    
+                    // Check nếu đang trong map animation thì không cho toggle glasses
+                    if (stateInfo.IsName("PullOutMap") || 
+                        stateInfo.IsName("HoldingMap") || 
+                        stateInfo.IsName("PutAwayMap"))
+                    {
+                        Debug.Log("[GlassesController] Cannot toggle glasses while using map");
+                        return;
+                    }
+                }
+
                 if (viewModel != null)
                 {
                     viewModel.ToggleGlasses();

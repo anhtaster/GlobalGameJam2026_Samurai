@@ -66,4 +66,22 @@ public class LevelManager : MonoBehaviour
         string currentScene = SceneManager.GetActiveScene().name;
         LoadLevel(currentScene);
     }
+
+    /// <summary>
+    /// Load the next level in build index order
+    /// </summary>
+    public void LoadNextLevel()
+    {
+        int currentSceneIndex = SceneManager.GetActiveScene().buildIndex;
+        int nextSceneIndex = currentSceneIndex + 1;
+        
+        if (nextSceneIndex < SceneManager.sceneCountInBuildSettings)
+        {
+            StartCoroutine(LoadLevelRoutine(SceneManager.GetSceneByBuildIndex(nextSceneIndex).name));
+        }
+        else
+        {
+            Debug.LogWarning($"[LevelManager] No next scene found! Current index: {currentSceneIndex}");
+        }
+    }
 }

@@ -8,6 +8,7 @@ public class TutorialView : MonoBehaviour
     [Header("UI References")]
     [SerializeField] private TextMeshProUGUI subtitleText;
     [SerializeField] private CanvasGroup tutorialPanel;
+    [SerializeField] private TextMeshProUGUI skipHintText; // Text "Press Tab to skip"
 
     [Header("Animation Settings")]
     [SerializeField] private float fadeDuration = 0.5f;
@@ -28,6 +29,12 @@ public class TutorialView : MonoBehaviour
             tutorialPanel.interactable = false;
             tutorialPanel.blocksRaycasts = false;
             tutorialPanel.gameObject.SetActive(false);
+        }
+
+        if (skipHintText != null)
+        {
+            skipHintText.alpha = 0f;
+            skipHintText.gameObject.SetActive(false);
         }
     }
 
@@ -65,6 +72,36 @@ public class TutorialView : MonoBehaviour
             {
                 subtitleText.text = "";
                 subtitleText.gameObject.SetActive(false);
+            });
+        }
+    }
+
+    /// <summary>
+    /// Shows the "Press Tab to skip" hint.
+    /// </summary>
+    public void ShowSkipHint()
+    {
+        if (skipHintText != null)
+        {
+            skipHintText.DOKill();
+            skipHintText.text = "Press Tab to skip";
+            skipHintText.alpha = 0f;
+            skipHintText.gameObject.SetActive(true);
+            skipHintText.DOFade(1f, fadeDuration);
+        }
+    }
+
+    /// <summary>
+    /// Hides the "Press Tab to skip" hint.
+    /// </summary>
+    public void HideSkipHint()
+    {
+        if (skipHintText != null)
+        {
+            skipHintText.DOKill();
+            skipHintText.DOFade(0f, fadeDuration).OnComplete(() =>
+            {
+                skipHintText.gameObject.SetActive(false);
             });
         }
     }

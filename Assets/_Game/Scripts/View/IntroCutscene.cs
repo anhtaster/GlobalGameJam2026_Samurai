@@ -32,10 +32,42 @@ public class IntroCutscene : MonoBehaviour
     [Header("Player Control")]
     public StarterAssets.FirstPersonController playerController;
 
+    // Skip narrator support
+    private int currentNarrativeIndex = 0;
+    private bool isPlayingNarrativeSequence = false;
+    private bool skipRequested = false;
+
     private void Start()
     {
         SetupBlur();
         StartCoroutine(PlayIntroSequence());
+    }
+
+    private void OnEnable()
+    {
+        // Subscribe vào event skip của TutorialViewModel
+        if (TutorialViewModel.Instance != null)
+        {
+            TutorialViewModel.Instance.OnNarrativeSkipped += HandleNarrativeSkipped;
+        }
+    }
+
+    private void OnDisable()
+    {
+        // Unsubscribe khỏi event
+        if (TutorialViewModel.Instance != null)
+        {
+            TutorialViewModel.Instance.OnNarrativeSkipped -= HandleNarrativeSkipped;
+        }
+    }
+
+    private void HandleNarrativeSkipped()
+    {
+        if (isPlayingNarrativeSequence)
+        {
+            skipRequested = true;
+            Debug.Log("[IntroCutscene] Skip requested via Tab key");
+        }
     }
 
     private void SetupBlur()
@@ -78,6 +110,13 @@ public class IntroCutscene : MonoBehaviour
             }
         }
 
+        // Subscribe lại sau khi TutorialViewModel có thể đã được khởi tạo
+        if (TutorialViewModel.Instance != null)
+        {
+            TutorialViewModel.Instance.OnNarrativeSkipped -= HandleNarrativeSkipped;
+            TutorialViewModel.Instance.OnNarrativeSkipped += HandleNarrativeSkipped;
+        }
+
         // --- Step 1: Clear the Blur ---
         if (_depthOfField != null)
         {
@@ -93,15 +132,40 @@ public class IntroCutscene : MonoBehaviour
         
         if (TutorialViewModel.Instance != null && narrativeSequence != null && narrativeSequence.Count > 0)
         {
-            foreach (var line in narrativeSequence)
+            isPlayingNarrativeSequence = true;
+            currentNarrativeIndex = 0;
+
+            while (currentNarrativeIndex < narrativeSequence.Count)
             {
-                Debug.Log($"[IntroCutscene] Playing line: '{line.text}' for {line.duration}s");
+                var line = narrativeSequence[currentNarrativeIndex];
+                Debug.Log($"[IntroCutscene] Playing line {currentNarrativeIndex + 1}/{narrativeSequence.Count}: '{line.text}' for {line.duration}s");
+                
+                // Reset skip flag
+                skipRequested = false;
+                
                 // Play current line
                 TutorialViewModel.Instance.PlayNarrative(line.text, line.voiceClip, line.duration);
                 
-                // Wait for the duration of this line before playing the next
-                yield return new WaitForSeconds(line.duration + 0.5f); 
+                // Wait for duration hoặc cho đến khi bị skip
+                float elapsedTime = 0f;
+                float waitDuration = line.duration + 0.5f;
+                
+                while (elapsedTime < waitDuration && !skipRequested)
+                {
+                    elapsedTime += Time.deltaTime;
+                    yield return null;
+                }
+                
+                // Chuyển sang narrator tiếp theo
+                currentNarrativeIndex++;
+                
+                if (skipRequested)
+                {
+                    Debug.Log($"[IntroCutscene] Skipped to narrative {currentNarrativeIndex + 1}");
+                }
             }
+
+            isPlayingNarrativeSequence = false;
         }
         else
         {
@@ -111,18 +175,18 @@ public class IntroCutscene : MonoBehaviour
         // Delay before showing Tutorial Panel
         yield return new WaitForSeconds(0.5f);
 
-        // --- Step 3: Trigger Tutorial Panel ---
-        if (TutorialViewModel.Instance != null)
-        {
-            Debug.Log("[IntroCutscene] Triggering Tutorial Panel via ViewModel...");
-            TutorialViewModel.Instance.ShowTutorialPanel(tutorialDisplayDuration);
-        }
-
         // Enable Player Input
         if (playerController != null)
         {
             playerController.enabled = true;
             Debug.Log("[IntroCutscene] Player Input Enabled.");
+        }
+
+        // --- Step 3: Trigger Tutorial Panel (AFTER player input restored) ---
+        if (TutorialViewModel.Instance != null)
+        {
+            Debug.Log("[IntroCutscene] Triggering Tutorial Panel via ViewModel...");
+            TutorialViewModel.Instance.ShowTutorialPanel(tutorialDisplayDuration);
         }
 
         Debug.Log("[IntroCutscene] Sequence Completed.");
