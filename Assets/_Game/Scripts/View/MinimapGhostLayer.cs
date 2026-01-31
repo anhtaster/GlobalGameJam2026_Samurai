@@ -60,7 +60,6 @@ namespace GlobalGameJam
 
         public void UpdateCursorPosition(Vector2Int centerGridPos, float cellSize)
         {
-            if (ghostRect == null || gridView == null) return;
             if (isLocked || ghostRect == null || gridView == null) return;
 
             currentGridPos = centerGridPos;
