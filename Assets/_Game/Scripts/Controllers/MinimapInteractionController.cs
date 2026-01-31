@@ -90,9 +90,6 @@ namespace GlobalGameJam
 
                 if (Keyboard.current.eKey.wasPressedThisFrame)
                 {
-                    if (colorGroupController != null)
-                        colorGroupController.ToggleR();
-
                     if (isMapMode)
                         TryToggleWall();
                 }
@@ -107,11 +104,11 @@ namespace GlobalGameJam
 
                 if (Keyboard.current != null)
                 {
-                    if (Keyboard.current.wKey.isPressed) inputVector.y = -1;
-                    else if (Keyboard.current.sKey.isPressed) inputVector.y = 1;
+                    if (Keyboard.current.upArrowKey.isPressed) inputVector.y = 1;
+                    else if (Keyboard.current.downArrowKey.isPressed) inputVector.y = -1;
                     
-                    if (Keyboard.current.dKey.isPressed) inputVector.x = 1;
-                    else if (Keyboard.current.aKey.isPressed) inputVector.x = -1;
+                    if (Keyboard.current.rightArrowKey.isPressed) inputVector.x = 1;
+                    else if (Keyboard.current.leftArrowKey.isPressed) inputVector.x = -1;
                 }
 
                 // Block movement if walls already hidden
