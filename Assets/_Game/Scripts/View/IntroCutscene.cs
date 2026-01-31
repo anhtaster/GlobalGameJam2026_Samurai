@@ -111,18 +111,18 @@ public class IntroCutscene : MonoBehaviour
         // Delay before showing Tutorial Panel
         yield return new WaitForSeconds(0.5f);
 
-        // --- Step 3: Trigger Tutorial Panel ---
-        if (TutorialViewModel.Instance != null)
-        {
-            Debug.Log("[IntroCutscene] Triggering Tutorial Panel via ViewModel...");
-            TutorialViewModel.Instance.ShowTutorialPanel(tutorialDisplayDuration);
-        }
-
         // Enable Player Input
         if (playerController != null)
         {
             playerController.enabled = true;
             Debug.Log("[IntroCutscene] Player Input Enabled.");
+        }
+
+        // --- Step 3: Trigger Tutorial Panel (AFTER player input restored) ---
+        if (TutorialViewModel.Instance != null)
+        {
+            Debug.Log("[IntroCutscene] Triggering Tutorial Panel via ViewModel...");
+            TutorialViewModel.Instance.ShowTutorialPanel(tutorialDisplayDuration);
         }
 
         Debug.Log("[IntroCutscene] Sequence Completed.");

@@ -98,4 +98,26 @@ public class TutorialViewModel : MonoBehaviour
             view.HidePanel();
         }
     }
+
+    /// <summary>
+    /// Show the tutorial panel (stays visible until manually hidden)
+    /// </summary>
+    public void ShowPanel()
+    {
+        if (view != null)
+        {
+            view.ShowPanel();
+        }
+    }
+
+    /// <summary>
+    /// Hide the tutorial panel
+    /// </summary>
+    public void HidePanel()
+    {
+        if (view != null)
+        {
+            view.HidePanel();
+        }
+    }
 }

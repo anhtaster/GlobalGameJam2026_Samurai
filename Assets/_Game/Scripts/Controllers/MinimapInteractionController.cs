@@ -11,6 +11,7 @@ namespace GlobalGameJam
         [SerializeField] private MinimapGhostLayer ghostLayer;
         [SerializeField] private MapController mapController;
         [SerializeField] private ColorGroupController colorGroupController;
+        [SerializeField] private TutorialProgressionViewModel tutorialProgressionViewModel;
         
         [Header("Texture Mode")]
         [SerializeField] private MinimapTextureRenderer textureRenderer;
@@ -55,6 +56,9 @@ namespace GlobalGameJam
             if (colorGroupController == null)
                 colorGroupController = FindFirstObjectByType<ColorGroupController>();
 
+            if (tutorialProgressionViewModel == null)
+                tutorialProgressionViewModel = FindFirstObjectByType<TutorialProgressionViewModel>();
+
             useTextureMode = textureRenderer != null;
 
             
@@ -85,6 +89,13 @@ namespace GlobalGameJam
                 // Toggle on each press
                 if (Keyboard.current.mKey.wasPressedThisFrame)
                 {
+                    // Check if MapToggle is unlocked
+                    if (tutorialProgressionViewModel != null && !tutorialProgressionViewModel.IsMapToggleUnlocked)
+                    {
+                        Debug.Log("[MinimapInteractionController] Map toggle is locked! Pick up the Map Toggle item first.");
+                        return;
+                    }
+                    
                     SetMapMode(!isMapMode);
                 }
 
