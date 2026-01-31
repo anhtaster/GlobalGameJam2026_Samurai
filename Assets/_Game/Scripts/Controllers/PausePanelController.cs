@@ -69,17 +69,30 @@ public class PausePanelController : MonoBehaviour
     {
         if (menuOptions == null || menuOptions.Length == 0) return;
 
-        RectTransform selectedText = menuOptions[currentIndex];
+        // 1. Lấy mục đang chọn
+        RectTransform selectedRect = menuOptions[currentIndex];
         
-        // Sử dụng localPosition để đồng bộ tọa độ trong cùng một cha (PausePanel)
-        Vector3 targetPos = selectedText.localPosition;
-        
-        // Lấy chiều rộng thực tế của khung chữ
-        float textWidth = selectedText.rect.width * selectedText.localScale.x;
+        // 2. Lấy component TextMeshPro để đo độ rộng thực tế của chữ
+        var tmpText = selectedRect.GetComponent<TextMeshProUGUI>();
+        float actualTextWidth;
 
-        // Cập nhật vị trí cho 2 mũi tên kẹp hai bên
-        leftArrow.localPosition = new Vector3(targetPos.x - (textWidth / 2f) - padding, targetPos.y, targetPos.z);
-        rightArrow.localPosition = new Vector3(targetPos.x + (textWidth / 2f) + padding, targetPos.y, targetPos.z);
+        if (tmpText != null)
+        {
+            // preferredWidth lấy độ rộng thật của chữ, không tính phần trống của khung
+            actualTextWidth = tmpText.preferredWidth;
+        }
+        else
+        {
+            actualTextWidth = selectedRect.rect.width;
+        }
+
+        // 3. Tính toán vị trí dựa trên Scale của chính nó
+        float finalWidth = actualTextWidth * selectedRect.localScale.x;
+        Vector3 targetPos = selectedRect.localPosition;
+
+        // 4. Cập nhật vị trí mũi tên (Dùng padding để điều chỉnh khoảng cách xa gần tùy ý)
+        leftArrow.localPosition = new Vector3(targetPos.x - (finalWidth / 2f) - padding, targetPos.y, targetPos.z);
+        rightArrow.localPosition = new Vector3(targetPos.x + (finalWidth / 2f) + padding, targetPos.y, targetPos.z);
     }
 
     void ConfirmSelection()
