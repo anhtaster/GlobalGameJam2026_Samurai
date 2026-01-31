@@ -12,14 +12,15 @@ namespace GlobalGameJam
         [SerializeField] private MinimapGridModel gridModel;
 
         [Header("Debug Visualization")]
-        [SerializeField] private bool logGridData = true;
-        [SerializeField] private bool drawDebugCubes = true;
+        [SerializeField] private bool logGridData = false;
+        [SerializeField] private bool drawDebugCubes = false;
         [SerializeField] private float debugCubeHeight = 0.5f;
 
         private void Start()
         {
-            // Wait for GridScanner to finish
-            Invoke(nameof(DebugGridData), 0.5f);
+            // Debug logging disabled by default to prevent console spam
+            // Uncomment to enable debug logging
+            // Invoke(nameof(DebugGridData), 0.5f);
         }
 
         private void DebugGridData()

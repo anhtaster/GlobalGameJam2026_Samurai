@@ -59,7 +59,7 @@ namespace GlobalGameJam
             // wallToggleService is now serialized - fallback to find if not assigned
             if (wallToggleService == null)
             {
-                wallToggleService = FindObjectOfType<WallToggleService>();
+                wallToggleService = FindFirstObjectByType<WallToggleService>();
                 if (wallToggleService == null)
                 {
                     Debug.LogWarning("[MinimapViewport] WallToggleService not found! Please assign in Inspector.");

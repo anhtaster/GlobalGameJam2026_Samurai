@@ -16,7 +16,7 @@ namespace GlobalGameJam
             // Check Canvas
             if (canvas == null)
             {
-                canvas = FindObjectOfType<Canvas>();
+                canvas = FindFirstObjectByType<Canvas>();
             }
 
             if (canvas != null)
