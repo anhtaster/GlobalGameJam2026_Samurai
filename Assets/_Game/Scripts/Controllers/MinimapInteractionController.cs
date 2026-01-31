@@ -185,14 +185,27 @@ namespace GlobalGameJam
 
         private void TryToggleWall()
         {
-            if (wallToggleService == null || ghostLayer == null) return;
+            if (wallToggleService == null || ghostLayer == null || gridView == null) return;
 
-            bool success = wallToggleService.ToggleRegion(currentCursorPos, ghostLayer.MaskSize);
+            // Convert Local Viewport Position (currentCursorPos) to World Grid Position
+            MinimapCellView cell = gridView.GetCellView(currentCursorPos);
             
-            if (success)
+            if (cell != null)
             {
-                // Update visual state (Green <-> Red)
-                ghostLayer.SetState(wallToggleService.IsRegionActive);
+                Vector2Int worldPos = cell.WorldGridPosition;
+                Debug.Log($"[MinimapInteractionController] Toggling Region. Cursor: {currentCursorPos} -> World: {worldPos}");
+
+                bool success = wallToggleService.ToggleRegion(worldPos, ghostLayer.MaskSize);
+                
+                if (success)
+                {
+                    // Update visual state (Green <-> Red)
+                    ghostLayer.SetState(wallToggleService.IsRegionActive);
+                }
+            }
+            else
+            {
+                Debug.LogWarning($"[MinimapInteractionController] Could not find CellView at cursor: {currentCursorPos}");
             }
         }
     }

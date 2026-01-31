@@ -132,13 +132,21 @@ namespace GlobalGameJam
 
                     if (cellView != null && cellData != null)
                     {
+                        // Clear any previous highlight/override before updating
+                        cellView.SetVisualOverride(false, Color.white);
+                        
                         // Update cell view with data from full map
                         cellView.SetCellType(cellData.CellType);
+                        cellView.WorldGridPosition = fullMapPos; // Important for coordinate mapping
                     }
                     else if (cellView != null)
                     {
+                        // Clear any previous highlight/override
+                        cellView.SetVisualOverride(false, Color.white);
+                        
                         // Out of bounds or no data - show empty
                         cellView.SetCellType(CellType.Empty);
+                        cellView.WorldGridPosition = fullMapPos;
                     }
                 }
             }

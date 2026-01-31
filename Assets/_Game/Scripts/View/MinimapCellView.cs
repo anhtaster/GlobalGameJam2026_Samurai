@@ -28,13 +28,23 @@ namespace GlobalGameJam
             UpdateVisual();
         }
 
+        private bool isOverrideActive = false;
+        private Color currentOverrideColor;
+
         public void UpdateVisual()
         {
             if (cellData == null || colorConfig == null || cellImage == null)
                 return;
 
-            Color cellColor = colorConfig.GetColorForCellType(cellData.CellType);
-            cellImage.color = cellColor;
+            if (isOverrideActive)
+            {
+                cellImage.color = currentOverrideColor;
+            }
+            else
+            {
+                Color cellColor = colorConfig.GetColorForCellType(cellData.CellType);
+                cellImage.color = cellColor;
+            }
             
             // Don't disable/enable image - it causes GridLayoutGroup to rebuild
             // Instead, use transparent color for Empty cells (set in ColorConfig)
@@ -59,18 +69,15 @@ namespace GlobalGameJam
             return cellData;
         }
 
+        // Added to track actual world coordinate in Viewport Mode
+        public Vector2Int WorldGridPosition { get; set; }
+
         public void SetVisualOverride(bool active, Color overrideColor)
         {
-            if (cellImage == null) return;
-
-            if (active)
-            {
-                cellImage.color = overrideColor;
-            }
-            else
-            {
-                UpdateVisual(); // Revert to normal
-            }
+            isOverrideActive = active;
+            currentOverrideColor = overrideColor;
+            
+            UpdateVisual();
         }
     }
 }

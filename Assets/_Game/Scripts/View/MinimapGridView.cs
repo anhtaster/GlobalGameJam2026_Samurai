@@ -224,10 +224,31 @@ namespace GlobalGameJam
 
         public void SetCellColorOverride(Vector2Int gridPos, bool active, Color color)
         {
+            // First, try direct lookup (Local Coordinate)
             MinimapCellView cellView = GetCellView(gridPos);
+            
+            // If not found, it might be a World Coordinate (from WallToggleService). 
+            // Iterate to find the matching Viewport Cell.
+            if (cellView == null)
+            {
+                foreach (var view in cellViews.Values)
+                {
+                    if (view.WorldGridPosition == gridPos)
+                    {
+                        cellView = view;
+                        break;
+                    }
+                }
+            }
+
             if (cellView != null)
             {
                 cellView.SetVisualOverride(active, color);
+            }
+            else
+            {
+                // Commented out log to avoid spam if target is outside Viewport
+                // Debug.LogWarning($"[MinimapGridView] SetCellColorOverride failed: No View found for {gridPos}");
             }
         }
     }
