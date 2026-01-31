@@ -1,5 +1,8 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
+using System.Collections.Generic;
+using System.Collections;
 
 namespace GlobalGameJam
 {
@@ -9,6 +12,15 @@ namespace GlobalGameJam
         [SerializeField] private string pullOutMapTrigger = "PullOutMap";
         [SerializeField] private string holdingMapParameter = "HoldingMap";
         [SerializeField] private string putAwayMapTrigger = "PutAwayMap";
+        [SerializeField] private string zoomInMapTrigger = "ZoomInMap";
+        [SerializeField] private string zoomOutMapTrigger = "ZoomOutMap";
+
+        [Header("Map 3D Model")]
+        [SerializeField] private GameObject mapObject; // Reference đến map 3D model (nhắc trong Editor)
+        [SerializeField] private string mapObjectNameHint = "Map";
+        [SerializeField] private string[] mapObjectNameHints = new[] { "Map", "Paper", "MapPaper", "Map_Paper" };
+        [SerializeField] private bool forceMapLayerToDefault = false;
+        [SerializeField] private bool forceTreatAsLevel2 = false;
 
         [Header("Cross-Controller References")]
         [SerializeField] private GlassesController glassesController;
@@ -25,8 +37,35 @@ namespace GlobalGameJam
         private Animator animator;
         private bool isMapOpen = false;
         private bool isTransitioning = false;
-        private bool mapVisible = false;
-        private float showAtTime = -1f;
+        private Renderer[] cachedMapRenderers;
+
+        /// <summary>
+        /// Kiểm tra xem đang ở level 1 hay không
+        /// Level 1 có build index = 1 (0 là main menu)
+        /// </summary>
+        public bool IsTutorialLevel()
+        {
+            var scene = SceneManager.GetActiveScene();
+            string sceneName = scene.name.ToLowerInvariant();
+
+            // Nếu scene là Level 1/tutorial thì luôn coi là tutorial (bỏ qua override)
+            if (sceneName.Contains("level1") || sceneName.Contains("tutorial") || scene.buildIndex == 1)
+            {
+                return true;
+            }
+
+            // Cho phép override chỉ ở Level 2+
+            if (forceTreatAsLevel2) return false;
+
+            // Nếu build index >= 2 thì chắc chắn là Level 2+
+            if (scene.buildIndex >= 2)
+            {
+                return false;
+            }
+
+            // Fallback: main menu không phải tutorial
+            return false;
+        }
 
         private void Start()
         {
@@ -68,28 +107,37 @@ namespace GlobalGameJam
                 glassesController = FindFirstObjectByType<GlassesController>();
             }
 
-            // Tìm MapSheetRenderer nếu chưa gán
-            if (mapSheetRenderer == null)
+            // Auto-find map object nếu chưa gán (hữu ích khi copy arm sang level khác)
+            if (mapObject == null)
             {
-                mapSheetRenderer = GetComponentInChildren<MapSheetRenderer>(true);
+                mapObject = AutoFindMapObject();
             }
 
-            // Check if map model should be hidden for tutorial
-            if (progressionModel != null && !progressionModel.isMapModelUnlocked)
+            if (mapObject != null)
             {
-                if (arm2Model != null)
-                {
-                    arm2Model.SetActive(false);
-                    Debug.Log("[MapController] Arm2 model hidden - waiting for map pickup");
-                }
+                cachedMapRenderers = mapObject.GetComponentsInChildren<Renderer>(true);
+                LogMapState("Start");
             }
-            else if (alwaysHoldingMap && animator != null)
+
+            // Luôn ẩn map cho đến khi nhặt item
+            if (mapObject != null)
             {
-                animator.SetBool(holdingMapParameter, true);
-                isMapOpen = true;
-                isTransitioning = false;
+                mapObject.SetActive(false);
+                DisableMapRenderers(mapObject);
+                Debug.Log("[MapController] Map object hidden initially (wait for pickup)");
+            }
+            else
+            {
+                Debug.LogWarning("[MapController] Map object chưa được gán và không tự tìm thấy. Hãy kéo map 3D object vào field 'Map Object' trong Inspector.");
             }
         }
+
+        private void LateUpdate()
+        {
+            // No auto-forcing visibility. Map shows only after pickup.
+        }
+
+        // Removed auto-force visibility methods (map appears only after pickup)
 
         private void Update()
         {
@@ -144,7 +192,13 @@ namespace GlobalGameJam
         // Public methods để MinimapInteractionController gọi
         public void OpenMapExternal()
         {
-            if (alwaysHoldingMap) return;
+            LogMapState("OpenMapExternal");
+            // Đảm bảo map object được tìm thấy nếu chưa gán
+            if (mapObject == null)
+            {
+                mapObject = AutoFindMapObject();
+            }
+
             // Không cho mở map khi đang trong glasses animation
             if (glassesController != null && animator != null)
             {
@@ -160,7 +214,16 @@ namespace GlobalGameJam
             // Debug.Log("[MapController] OpenMapExternal called");
             if (!isMapOpen && !isTransitioning)
             {
-                OpenMap();
+                if (IsTutorialLevel())
+                {
+                    // Level 1: Play animation lấy map
+                    OpenMap();
+                }
+                else
+                {
+                    // Level 2+: Chỉ zoom in (map đã được giữ sẵn)
+                    ZoomInMap();
+                }
             }
             else
             {
@@ -186,7 +249,16 @@ namespace GlobalGameJam
             // Debug.Log("[MapController] CloseMapExternal called");
             if (isMapOpen && !isTransitioning)
             {
-                CloseMap();
+                if (IsTutorialLevel())
+                {
+                    // Level 1: Play animation cất map
+                    CloseMap();
+                }
+                else
+                {
+                    // Level 2+: Chỉ zoom out (map vẫn giữ)
+                    ZoomOutMap();
+                }
             }
             else
             {
@@ -252,63 +324,217 @@ namespace GlobalGameJam
             isTransitioning = false;
         }
 
-        // Public methods để gọi từ Animation Events
-        public void ShowMapSheet()
+        // ===== PUBLIC METHODS =====
+        
+        /// <summary>
+        /// Hiển thị map 3D object (gọi khi nhặt map item)
+        /// </summary>
+        public void ShowMapObject()
         {
-            if (mapSheetRenderer != null)
+            if (mapObject != null && !mapObject.activeSelf)
             {
-                mapSheetRenderer.ShowMap();
-            }
-        }
-
-        public void HideMapSheet()
-        {
-            if (mapSheetRenderer != null)
-            {
-                mapSheetRenderer.HideMap();
+                mapObject.SetActive(true);
+                EnsureMapVisible(mapObject);
+                Debug.Log("[MapController] Map object shown (picked up item)");
             }
         }
 
         /// <summary>
-        /// Enable Arm2 model when player picks up map in tutorial
+        /// Hiển thị map lần đầu tiên với animation (khi nhặt map item)
         /// </summary>
-        public void EnableMapModel()
+        public void ShowMapForFirstTime()
         {
-            if (arm2Model != null)
+            // Hiển thị map 3D object
+            ShowMapObject();
+            
+            // Trigger animation lấy map ra
+            if (animator != null)
             {
-                arm2Model.SetActive(true);
-                Debug.Log("[MapController] Arm2 model enabled - map picked up!");
+                Debug.Log("[MapController] First time picking up map - Playing PullOutMap animation");
+                isMapOpen = true;
+                isTransitioning = true;
                 
-                // Set animator to holding state
-                if (alwaysHoldingMap && animator != null)
-                {
-                    animator.SetBool(holdingMapParameter, true);
-                    isMapOpen = true;
-                    isTransitioning = false;
-                }
-
-                // Re-find MapSheetRenderer after enabling arm2Model
-                if (mapSheetRenderer == null)
-                {
-                    mapSheetRenderer = GetComponentInChildren<MapSheetRenderer>(true);
-                }
-
-                // Show map sheet immediately (no delay)
-                if (mapSheetRenderer != null)
-                {
-                    mapSheetRenderer.ShowMap();
-                    mapVisible = true;
-                    Debug.Log("[MapController] Map sheet shown immediately after pickup");
-                }
-                else
-                {
-                    Debug.LogWarning("[MapController] MapSheetRenderer not found after enabling Arm2!");
-                }
+                // Trigger PullOutMap animation
+                animator.SetTrigger(pullOutMapTrigger);
+                
+                // Sau đó giữ map
+                Invoke(nameof(StartHoldingMap), 0.1f);
             }
-            else
+        }
+
+        private void EnsureMapVisible(GameObject target)
+        {
+            if (target == null) return;
+
+            // Bật toàn bộ parent chain để tránh bị tắt từ root
+            Transform current = target.transform;
+            while (current != null)
             {
-                Debug.LogWarning("[MapController] Arm2 model reference is null!");
+                if (!current.gameObject.activeSelf)
+                {
+                    current.gameObject.SetActive(true);
+                }
+                current = current.parent;
             }
+
+            // Bật tất cả Renderer để chắc chắn hiển thị
+            Renderer[] renderers = target.GetComponentsInChildren<Renderer>(true);
+            foreach (var r in renderers)
+            {
+                if (r != null) r.enabled = true;
+            }
+
+            if (forceMapLayerToDefault)
+            {
+                SetLayerRecursively(target, 0);
+            }
+
+            // Log nhanh để debug
+            Debug.Log($"[MapController] EnsureMapVisible -> renderers: {renderers.Length}, activeSelf: {target.activeSelf}");
+        }
+
+        private void SetLayerRecursively(GameObject obj, int layer)
+        {
+            if (obj == null) return;
+            obj.layer = layer;
+            foreach (Transform child in obj.transform)
+            {
+                if (child != null) SetLayerRecursively(child.gameObject, layer);
+            }
+        }
+
+        private void DisableMapRenderers(GameObject target)
+        {
+            if (target == null) return;
+            Renderer[] renderers = target.GetComponentsInChildren<Renderer>(true);
+            foreach (var r in renderers)
+            {
+                if (r != null) r.enabled = false;
+            }
+        }
+
+
+        private void LogMapState(string context)
+        {
+            if (mapObject == null)
+            {
+                Debug.LogWarning($"[MapController] {context}: mapObject is NULL");
+                return;
+            }
+
+            Camera cam = Camera.main;
+            int layer = mapObject.layer;
+            bool camRendersLayer = cam != null && ((cam.cullingMask & (1 << layer)) != 0);
+            int rendererCount = mapObject.GetComponentsInChildren<Renderer>(true).Length;
+
+            Debug.Log($"[MapController] {context}: mapObject='{mapObject.name}', activeSelf={mapObject.activeSelf}, layer={layer}, camRendersLayer={camRendersLayer}, renderers={rendererCount}");
+        }
+
+        private GameObject AutoFindMapObject()
+        {
+            // Chuẩn hóa danh sách hint
+            List<string> hints = new List<string>();
+            if (!string.IsNullOrEmpty(mapObjectNameHint)) hints.Add(mapObjectNameHint);
+            if (mapObjectNameHints != null)
+            {
+                foreach (var h in mapObjectNameHints)
+                {
+                    if (!string.IsNullOrEmpty(h)) hints.Add(h);
+                }
+            }
+
+            // Ưu tiên tìm theo tên hint trong children (kể cả inactive)
+            if (hints.Count > 0)
+            {
+                Transform[] children = GetComponentsInChildren<Transform>(true);
+                foreach (var child in children)
+                {
+                    if (child != null)
+                    {
+                        foreach (var h in hints)
+                        {
+                            if (child.name.Contains(h))
+                            {
+                                Debug.Log($"[MapController] AutoFindMapObject found in children: {child.name}");
+                                return child.gameObject;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Tìm theo tên hint trong toàn scene (kể cả inactive)
+            if (hints.Count > 0)
+            {
+                Transform[] all = FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+                foreach (var t in all)
+                {
+                    if (t != null)
+                    {
+                        foreach (var h in hints)
+                        {
+                            if (t.name.Contains(h))
+                            {
+                                Debug.Log($"[MapController] AutoFindMapObject found in scene: {t.name}");
+                                return t.gameObject;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Fallback: tìm child có Renderer để hiển thị (tránh root)
+            Renderer[] renderers = GetComponentsInChildren<Renderer>(true);
+            foreach (var r in renderers)
+            {
+                if (r != null && r.gameObject != this.gameObject)
+                {
+                    Debug.Log($"[MapController] AutoFindMapObject fallback renderer: {r.gameObject.name}");
+                    return r.gameObject;
+                }
+            }
+
+            return null;
+        }
+
+        // ===== ZOOM METHODS (Level 2+) =====
+        
+        private void ZoomInMap()
+        {
+            if (animator == null)
+            {
+                Debug.LogError("[MapController] Animator is NULL!");
+                return;
+            }
+
+            Debug.Log("[MapController] Zooming In Map (Level 2+)");
+            isMapOpen = true;
+            isTransitioning = true;
+
+            // Trigger ZoomInMap animation
+            animator.SetTrigger(zoomInMapTrigger);
+
+            // Reset transition flag after animation
+            Invoke(nameof(ResetTransition), 0.5f);
+        }
+
+        private void ZoomOutMap()
+        {
+            if (animator == null)
+            {
+                Debug.LogError("[MapController] Animator is NULL!");
+                return;
+            }
+
+            Debug.Log("[MapController] Zooming Out Map (Level 2+)");
+            isMapOpen = false;
+            isTransitioning = true;
+
+            // Trigger ZoomOutMap animation
+            animator.SetTrigger(zoomOutMapTrigger);
+
+            // Reset transition flag after animation
+            Invoke(nameof(ResetTransition), 0.5f);
         }
     }
 }

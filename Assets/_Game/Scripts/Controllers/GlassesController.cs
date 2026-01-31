@@ -5,6 +5,7 @@ namespace GlobalGameJam
 {
     /// <summary>
     /// Controller/View: Xử lý input và trigger animation, bind với ViewModel
+    /// Hỗ trợ đổi màu kính và hiệu ứng màn hình
     /// </summary>
     public class GlassesController : MonoBehaviour
     {
@@ -20,6 +21,9 @@ namespace GlobalGameJam
         [SerializeField] private MapController mapController;
         [SerializeField] private TutorialProgressionViewModel tutorialProgressionViewModel;
         [SerializeField] private ColorGroupController colorGroupController;
+
+        [Header("Screen Tint (Optional)")]
+        [SerializeField] private GlassesScreenTint screenTint;
 
         private Animator animator;
         private GlassesViewModel viewModel;
@@ -70,6 +74,16 @@ namespace GlobalGameJam
                 colorGroupController = FindFirstObjectByType<ColorGroupController>();
             }
 
+            // Tìm GlassesScreenTint nếu chưa gán
+            if (screenTint == null)
+            {
+                screenTint = FindFirstObjectByType<GlassesScreenTint>();
+                if (screenTint == null)
+                {
+                    Debug.LogWarning("[GlassesController] GlassesScreenTint not found! Screen overlay effect will not work. Create a UI Image with GlassesScreenTint component.");
+                }
+            }
+
             // Tạo ViewModel từ Model
             if (model != null)
             {
@@ -78,6 +92,7 @@ namespace GlobalGameJam
                 // Subscribe vào events từ ViewModel
                 viewModel.OnPutOnGlasses += HandlePutOnGlasses;
                 viewModel.OnPutOutGlasses += HandlePutOutGlasses;
+                viewModel.OnGlassColorChanged += HandleGlassColorChanged;
             }
             else
             {
@@ -92,6 +107,7 @@ namespace GlobalGameJam
             {
                 viewModel.OnPutOnGlasses -= HandlePutOnGlasses;
                 viewModel.OnPutOutGlasses -= HandlePutOutGlasses;
+                viewModel.OnGlassColorChanged -= HandleGlassColorChanged;
             }
         }
 
@@ -137,6 +153,36 @@ namespace GlobalGameJam
                     viewModel.ToggleGlasses();
                 }
             }
+
+            // Bấm C để cycle qua các màu kính (chỉ khi đang đeo kính)
+            if (Keyboard.current.cKey.wasPressedThisFrame)
+            {
+                if (viewModel != null && viewModel.IsWearingGlasses)
+                {
+                    viewModel.CycleGlassColor();
+                }
+                else
+                {
+                    Debug.Log("[GlassesController] Must be wearing glasses to change color! Press T first.");
+                }
+            }
+
+            // Hoặc dùng số 1, 2, 3 để chọn màu cụ thể (khi đang đeo kính)
+            if (viewModel != null && viewModel.IsWearingGlasses)
+            {
+                if (Keyboard.current.digit1Key.wasPressedThisFrame || Keyboard.current.numpad1Key.wasPressedThisFrame)
+                {
+                    viewModel.ChangeGlassColor(GlassColor.Red);
+                }
+                else if (Keyboard.current.digit2Key.wasPressedThisFrame || Keyboard.current.numpad2Key.wasPressedThisFrame)
+                {
+                    viewModel.ChangeGlassColor(GlassColor.Green);
+                }
+                else if (Keyboard.current.digit3Key.wasPressedThisFrame || Keyboard.current.numpad3Key.wasPressedThisFrame)
+                {
+                    viewModel.ChangeGlassColor(GlassColor.Blue);
+                }
+            }
         }
 
         /// <summary>
@@ -144,7 +190,7 @@ namespace GlobalGameJam
         /// </summary>
         private void HandlePutOnGlasses()
         {
-            Debug.Log("[GlassesController] ✓ PUTTING ON GLASSES - Now wearing glasses");
+            Debug.Log($"[GlassesController] ✓ PUTTING ON GLASSES - Color: {viewModel.CurrentGlassColor}");
             
             if (animator != null)
             {
@@ -152,10 +198,16 @@ namespace GlobalGameJam
                 animator.SetBool(wearingGlassesBool, true);
             }
 
+            // Enable screen tint
+            if (screenTint != null)
+            {
+                screenTint.ShowTint(viewModel.CurrentGlassColor);
+            }
+
             // Notify color block controller to restore saved state
             if (colorGroupController != null)
             {
-                colorGroupController.OnGlassesPutOn();
+                colorGroupController.OnGlassesPutOn(viewModel.CurrentGlassColor);
             }
         }
 
@@ -172,10 +224,36 @@ namespace GlobalGameJam
                 animator.SetBool(wearingGlassesBool, false);
             }
 
+            // Disable screen tint
+            if (screenTint != null)
+            {
+                screenTint.HideTint();
+            }
+
             // Notify color block controller to hide all blocks
             if (colorGroupController != null)
             {
                 colorGroupController.OnGlassesPutOff();
+            }
+        }
+
+        /// <summary>
+        /// View handler: Handle glass color change
+        /// </summary>
+        private void HandleGlassColorChanged(GlassColor newColor)
+        {
+            Debug.Log($"[GlassesController] 🎨 GLASS COLOR CHANGED to {newColor}");
+
+            // Update screen tint color
+            if (screenTint != null)
+            {
+                screenTint.ChangeTintColor(newColor);
+            }
+
+            // Update visible platforms based on color
+            if (colorGroupController != null)
+            {
+                colorGroupController.OnGlassColorChanged(newColor);
             }
         }
 
@@ -201,6 +279,18 @@ namespace GlobalGameJam
             }
         }
 
+        /// <summary>
+        /// Public API: Đổi màu kính từ code khác
+        /// </summary>
+        public void ChangeGlassColorExternal(GlassColor newColor)
+        {
+            if (viewModel != null)
+            {
+                viewModel.ChangeGlassColor(newColor);
+            }
+        }
+
         public bool IsWearingGlasses => viewModel != null && viewModel.IsWearingGlasses;
+        public GlassColor CurrentGlassColor => viewModel != null ? viewModel.CurrentGlassColor : GlassColor.Red;
     }
 }

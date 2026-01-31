@@ -1,21 +1,26 @@
 using UnityEngine;
-using UnityEngine.InputSystem; // Bắt buộc cho Input System mới
+using UnityEngine.InputSystem;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace GlobalGameJam
 {
     /// <summary>
-    /// Controller: Handle input và view updates cho color blocks
-    /// Follows MVVM pattern - delegates business logic to ViewModel
+    /// Controller: Manages visibility of ColoredPlatform objects based on glasses color
+    /// Automatically finds all ColoredPlatform components in the scene
     /// </summary>
     public class ColorGroupController : MonoBehaviour
     {
         [Header("Model Reference")]
         [SerializeField] private ColorBlockModel model;
 
-        [Header("Color Blocks (View)")]
-        [SerializeField] private GameObject redGroup;   // Block 1
-        [SerializeField] private GameObject greenGroup; // Block 2
-        [SerializeField] private GameObject blueGroup;  // Block 3
+        [Header("Auto-Find Platforms")]
+        [SerializeField] private bool autoFindPlatforms = true;
+        [Tooltip("Automatically find all ColoredPlatform components in scene")]
+
+        [Header("Manual Platform Assignment (Optional)")]
+        [SerializeField] private List<ColoredPlatform> manualPlatformList = new List<ColoredPlatform>();
+        [Tooltip("Only used if Auto Find Platforms is disabled")]
 
         [Header("Minimap References")]
         [SerializeField] private MinimapTextureRenderer minimapTextureRenderer;
@@ -24,14 +29,24 @@ namespace GlobalGameJam
         [Header("Glasses Integration")]
         [SerializeField] private GlassesController glassesController;
 
+        [Header("Behavior Mode")]
+        [SerializeField] private ColorBlockMode blockMode = ColorBlockMode.GlassColorMatch;
+        [Tooltip("GlassColorMatch: Platforms automatically match glass color\nManualToggle: Use 1/2/3 keys to manually toggle platforms")]
+
+        [Header("Debug")]
+        [SerializeField] private bool showDebugLogs = true;
+
+        private List<ColoredPlatform> allPlatforms = new List<ColoredPlatform>();
         private ColorBlockViewModel viewModel;
+        private GlassColor currentGlassColor = GlassColor.Red;
 
         void Start()
         {
-            // Initialize all blocks as hidden
-            if (redGroup) redGroup.SetActive(false);
-            if (greenGroup) greenGroup.SetActive(false);
-            if (blueGroup) blueGroup.SetActive(false);
+            // Find all colored platforms
+            FindAllPlatforms();
+
+            // Hide all platforms initially
+            HideAllPlatforms();
 
             // Find GlassesController if not assigned
             if (glassesController == null)
@@ -39,31 +54,21 @@ namespace GlobalGameJam
                 glassesController = FindFirstObjectByType<GlassesController>();
                 if (glassesController == null)
                 {
-                    Debug.LogWarning("[ColorGroupController] GlassesController not found! Color blocks will not be linked to glasses.");
+                    Debug.LogWarning("[ColorGroupController] GlassesController not found!");
                 }
             }
 
-            // Create ViewModel from Model
+            // Create ViewModel from Model if available
             if (model != null)
             {
                 viewModel = new ColorBlockViewModel(model);
-                
-                // Subscribe to ViewModel events
                 viewModel.OnColorBlockChanged += HandleColorBlockChanged;
                 viewModel.OnAllBlocksHidden += HandleAllBlocksHidden;
             }
-            else
-            {
-                Debug.LogError("[ColorGroupController] ColorBlockModel is not assigned! Please create a ColorBlockModel asset and assign it.");
-            }
-
-            // Subscribe to glasses events if available
-            SubscribeToGlassesEvents();
         }
 
         void OnDestroy()
         {
-            // Unsubscribe from events
             if (viewModel != null)
             {
                 viewModel.OnColorBlockChanged -= HandleColorBlockChanged;
@@ -73,12 +78,50 @@ namespace GlobalGameJam
 
         void Update()
         {
-            HandleInput();
+            // Only handle manual input in ManualToggle mode
+            if (blockMode == ColorBlockMode.ManualToggle)
+            {
+                HandleInput();
+            }
         }
 
         /// <summary>
-        /// Handle keyboard input for color block selection
-        /// Only works when wearing glasses
+        /// Find all ColoredPlatform components in the scene
+        /// </summary>
+        private void FindAllPlatforms()
+        {
+            allPlatforms.Clear();
+
+            if (autoFindPlatforms)
+            {
+                // Find all ColoredPlatform components in scene
+                ColoredPlatform[] foundPlatforms = FindObjectsByType<ColoredPlatform>(FindObjectsSortMode.None);
+                allPlatforms.AddRange(foundPlatforms);
+
+                if (showDebugLogs)
+                {
+                    int redCount = allPlatforms.Count(p => p.PlatformColor == GlassColor.Red);
+                    int greenCount = allPlatforms.Count(p => p.PlatformColor == GlassColor.Green);
+                    int blueCount = allPlatforms.Count(p => p.PlatformColor == GlassColor.Blue);
+                    
+                    Debug.Log($"[ColorGroupController] Auto-found {allPlatforms.Count} platforms: " +
+                             $"{redCount} Red, {greenCount} Green, {blueCount} Blue");
+                }
+            }
+            else
+            {
+                // Use manually assigned list
+                allPlatforms.AddRange(manualPlatformList);
+
+                if (showDebugLogs)
+                {
+                    Debug.Log($"[ColorGroupController] Using {allPlatforms.Count} manually assigned platforms");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Handle keyboard input for manual platform selection
         /// </summary>
         private void HandleInput()
         {
@@ -87,75 +130,54 @@ namespace GlobalGameJam
             var keyboard = Keyboard.current;
             if (keyboard == null) return;
 
-            // Check if wearing glasses - ONLY allow input when wearing glasses
+            // Must be wearing glasses
             if (glassesController == null || !glassesController.IsWearingGlasses)
             {
-                return; // Silently ignore input when not wearing glasses
+                return;
             }
 
-            // Number keys 1, 2, 3 for exclusive color block selection
-            if (keyboard.digit1Key.wasPressedThisFrame)
+            // Number keys 1, 2, 3 for platform selection
+            if (keyboard.digit1Key.wasPressedThisFrame || keyboard.numpad1Key.wasPressedThisFrame)
             {
-                Debug.Log("[ColorGroupController] Key 1 pressed - Red block");
                 viewModel.SelectBlock(1);
             }
-            else if (keyboard.digit2Key.wasPressedThisFrame)
+            else if (keyboard.digit2Key.wasPressedThisFrame || keyboard.numpad2Key.wasPressedThisFrame)
             {
-                Debug.Log("[ColorGroupController] Key 2 pressed - Green block");
                 viewModel.SelectBlock(2);
             }
-            else if (keyboard.digit3Key.wasPressedThisFrame)
+            else if (keyboard.digit3Key.wasPressedThisFrame || keyboard.numpad3Key.wasPressedThisFrame)
             {
-                Debug.Log("[ColorGroupController] Key 3 pressed - Blue block");
                 viewModel.SelectBlock(3);
             }
         }
 
         /// <summary>
-        /// Subscribe to glasses events to hide/restore blocks
-        /// </summary>
-        private void SubscribeToGlassesEvents()
-        {
-            if (glassesController == null || viewModel == null) return;
-
-            // We need to hook into glasses ViewModel events
-            // For now, we'll poll in Update or use a different approach
-            // Since GlassesController doesn't expose events, we'll handle in HandleGlassesStateChange
-        }
-
-        /// <summary>
-        /// Handle color block changes from ViewModel
-        /// Updates view (GameObjects) based on active block
+        /// Handle color block changes from ViewModel (ManualToggle mode)
         /// </summary>
         private void HandleColorBlockChanged(int activeBlock)
         {
-            // Hide all blocks first (exclusive selection)
-            if (redGroup) redGroup.SetActive(false);
-            if (greenGroup) greenGroup.SetActive(false);
-            if (blueGroup) blueGroup.SetActive(false);
-
-            // Show only the active block
-            switch (activeBlock)
+            if (blockMode == ColorBlockMode.GlassColorMatch)
             {
-                case 1:
-                    if (redGroup) redGroup.SetActive(true);
-                    Debug.Log("[ColorGroupController] Red block VISIBLE");
-                    break;
-                case 2:
-                    if (greenGroup) greenGroup.SetActive(true);
-                    Debug.Log("[ColorGroupController] Green block VISIBLE");
-                    break;
-                case 3:
-                    if (blueGroup) blueGroup.SetActive(true);
-                    Debug.Log("[ColorGroupController] Blue block VISIBLE");
-                    break;
-                case 0:
-                default:
-                    Debug.Log("[ColorGroupController] All blocks HIDDEN");
-                    break;
+                return; // Controlled by glass color instead
             }
 
-            // Refresh minimap
+            // Hide all first
+            HideAllPlatforms();
+
+            // Show only the active color
+            GlassColor colorToShow = activeBlock switch
+            {
+                1 => GlassColor.Red,
+                2 => GlassColor.Green,
+                3 => GlassColor.Blue,
+                _ => GlassColor.Red
+            };
+
+            if (activeBlock > 0)
+            {
+                ShowPlatformsOfColor(colorToShow);
+            }
+
             RefreshMinimap();
         }
 
@@ -164,16 +186,52 @@ namespace GlobalGameJam
         /// </summary>
         private void HandleAllBlocksHidden()
         {
-            if (redGroup) redGroup.SetActive(false);
-            if (greenGroup) greenGroup.SetActive(false);
-            if (blueGroup) blueGroup.SetActive(false);
-
-            Debug.Log("[ColorGroupController] All blocks hidden (glasses off)");
+            HideAllPlatforms();
             RefreshMinimap();
         }
 
         /// <summary>
-        /// Refresh minimap after color block changes
+        /// Show platforms of a specific color
+        /// </summary>
+        private void ShowPlatformsOfColor(GlassColor color)
+        {
+            int count = 0;
+            foreach (ColoredPlatform platform in allPlatforms)
+            {
+                if (platform != null && platform.PlatformColor == color)
+                {
+                    platform.Show();
+                    count++;
+                }
+            }
+
+            if (showDebugLogs)
+            {
+                Debug.Log($"[ColorGroupController] Showing {count} {color} platforms");
+            }
+        }
+
+        /// <summary>
+        /// Hide all platforms
+        /// </summary>
+        private void HideAllPlatforms()
+        {
+            foreach (ColoredPlatform platform in allPlatforms)
+            {
+                if (platform != null)
+                {
+                    platform.Hide();
+                }
+            }
+
+            if (showDebugLogs)
+            {
+                Debug.Log($"[ColorGroupController] All platforms hidden");
+            }
+        }
+
+        /// <summary>
+        /// Refresh minimap
         /// </summary>
         private void RefreshMinimap()
         {
@@ -188,26 +246,102 @@ namespace GlobalGameJam
             }
         }
 
+        // ========== PUBLIC API: Called by GlassesController ==========
+
         /// <summary>
-        /// Public API: Called by GlassesController when glasses are put on
+        /// Called when glasses are put on with specific color
         /// </summary>
-        public void OnGlassesPutOn()
+        public void OnGlassesPutOn(GlassColor glassColor)
         {
-            if (viewModel != null)
+            currentGlassColor = glassColor;
+
+            if (showDebugLogs)
             {
-                viewModel.RestoreSavedState();
+                Debug.Log($"[ColorGroupController] Glasses ON - Color: {glassColor}, Mode: {blockMode}");
             }
+
+            if (blockMode == ColorBlockMode.GlassColorMatch)
+            {
+                // Automatically show platforms matching glass color
+                HideAllPlatforms();
+                ShowPlatformsOfColor(glassColor);
+            }
+            else if (blockMode == ColorBlockMode.ManualToggle)
+            {
+                // Restore previously saved state
+                if (viewModel != null)
+                {
+                    viewModel.RestoreSavedState();
+                }
+            }
+
+            RefreshMinimap();
         }
 
         /// <summary>
-        /// Public API: Called by GlassesController when glasses are taken off
+        /// Backward compatibility
+        /// </summary>
+        public void OnGlassesPutOn()
+        {
+            GlassColor color = glassesController != null ? glassesController.CurrentGlassColor : GlassColor.Red;
+            OnGlassesPutOn(color);
+        }
+
+        /// <summary>
+        /// Called when glasses are taken off
         /// </summary>
         public void OnGlassesPutOff()
         {
+            if (showDebugLogs)
+            {
+                Debug.Log("[ColorGroupController] Glasses OFF - hiding all platforms");
+            }
+
+            HideAllPlatforms();
+
             if (viewModel != null)
             {
                 viewModel.HideAllBlocks();
             }
+
+            RefreshMinimap();
         }
+
+        /// <summary>
+        /// Called when glass color changes while wearing glasses
+        /// </summary>
+        public void OnGlassColorChanged(GlassColor newColor)
+        {
+            currentGlassColor = newColor;
+
+            if (showDebugLogs)
+            {
+                Debug.Log($"[ColorGroupController] Glass color changed to {newColor}");
+            }
+
+            if (blockMode == ColorBlockMode.GlassColorMatch)
+            {
+                // Automatically switch to matching platforms
+                HideAllPlatforms();
+                ShowPlatformsOfColor(newColor);
+                RefreshMinimap();
+            }
+        }
+
+        /// <summary>
+        /// Manual refresh - useful for debugging
+        /// </summary>
+        [ContextMenu("Refresh Platform List")]
+        public void RefreshPlatformList()
+        {
+            FindAllPlatforms();
+            Debug.Log($"[ColorGroupController] Refreshed: Found {allPlatforms.Count} platforms");
+        }
+    }
+
+    public enum ColorBlockMode
+    {
+        GlassColorMatch,
+        ManualToggle
     }
 }

@@ -213,7 +213,7 @@ namespace GlobalGameJam
                     if (tutorialProgressionViewModel != null)
                     {
                         Debug.Log($"[MinimapInteractionController] IsMapToggleUnlocked: {tutorialProgressionViewModel.IsMapToggleUnlocked}");
-                        
+
                         if (!tutorialProgressionViewModel.IsMapToggleUnlocked)
                         {
                             Debug.Log("[MinimapInteractionController] Map toggle is locked! Pick up the Map Toggle item first.");
