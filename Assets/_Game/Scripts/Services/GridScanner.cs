@@ -35,7 +35,7 @@ namespace GlobalGameJam
         {
             if (scanOnStart)
             {
-                Debug.Log("[GridScanner] Auto-scanning scene on Start...");
+                // Debug.Log("[GridScanner] Auto-scanning scene on Start...");
                 ScanScene();
             }
         }
@@ -53,7 +53,7 @@ namespace GlobalGameJam
 
             // Setup grid
             gridModel.SetupGrid(gridWidth, gridHeight, cellSize, gridOrigin);
-            Debug.Log($"[GridScanner] Grid initialized: {gridWidth}x{gridHeight}, Cell Size: {cellSize}");
+            // Debug.Log($"[GridScanner] Grid initialized: {gridWidth}x{gridHeight}, Cell Size: {cellSize}");
 
             // Find all objects with Floor tag
             GameObject[] floorObjects = GameObject.FindGameObjectsWithTag(floorTag);
@@ -83,7 +83,7 @@ namespace GlobalGameJam
             // Post-process: thin wall corners to single cells
             ThinWallCorners();
 
-            Debug.Log($"[GridScanner] Scan done: {floorObjects.Length} floors, {wallObjects.Length} walls");
+            // Debug.Log($"[GridScanner] Scan done: {floorObjects.Length} floors, {wallObjects.Length} walls");
         }
 
         /// <summary>
@@ -100,7 +100,7 @@ namespace GlobalGameJam
             // Debug log for walls
             if (cellType == CellType.Wall)
             {
-                Debug.Log($"[GridScanner] WALL: {obj.name} | WorldPos: {obj.transform.position} | Bounds: center={bounds.center}, size={bounds.size}");
+                // Debug.Log($"[GridScanner] WALL: {obj.name} | WorldPos: {obj.transform.position} | Bounds: center={bounds.center}, size={bounds.size}");
             }
             
             // Calculate min and max grid positions covered by this object
@@ -128,7 +128,7 @@ namespace GlobalGameJam
                     maxGrid.x = minGrid.x;
                 }
                 
-                Debug.Log($"[GridScanner] WALL: {obj.name} -> Grid [{minGrid.x},{minGrid.y}] to [{maxGrid.x},{maxGrid.y}]");
+                // Debug.Log($"[GridScanner] WALL: {obj.name} -> Grid [{minGrid.x},{minGrid.y}] to [{maxGrid.x},{maxGrid.y}]");
             }
             
             // Safeguard: limit max cells per object to prevent crashes
@@ -228,7 +228,7 @@ namespace GlobalGameJam
             
             if (cellsToRemove.Count > 0)
             {
-                Debug.Log($"[GridScanner] Pruned {cellsToRemove.Count} wall stubs (converted to Floor)");
+                // Debug.Log($"[GridScanner] Pruned {cellsToRemove.Count} wall stubs (converted to Floor)");
             }
         }
 

@@ -50,10 +50,10 @@ namespace GlobalGameJam
                 mapController = GetComponentInParent<MapController>();
 
             if (mapController == null)
-                mapController = FindObjectOfType<MapController>();
+                mapController = FindFirstObjectByType<MapController>();
 
             if (colorGroupController == null)
-                colorGroupController = FindObjectOfType<ColorGroupController>();
+                colorGroupController = FindFirstObjectByType<ColorGroupController>();
 
             useTextureMode = textureRenderer != null;
 
