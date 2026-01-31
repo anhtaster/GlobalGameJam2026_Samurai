@@ -31,6 +31,11 @@ namespace GlobalGameJam
             if (keyboard.bKey.wasPressedThisFrame) ToggleAndRefresh(bGroup);
         }
 
+        public void ToggleR()
+        {
+            ToggleAndRefresh(rGroup);
+        }
+
         private void ToggleAndRefresh(GameObject group)
         {
             if (group == null) return;

@@ -10,6 +10,7 @@ namespace GlobalGameJam
         [SerializeField] private WallToggleService wallToggleService;
         [SerializeField] private MinimapGhostLayer ghostLayer;
         [SerializeField] private MapController mapController;
+        [SerializeField] private ColorGroupController colorGroupController;
         
         [Header("Texture Mode")]
         [SerializeField] private MinimapTextureRenderer textureRenderer;
@@ -51,6 +52,9 @@ namespace GlobalGameJam
             if (mapController == null)
                 mapController = FindObjectOfType<MapController>();
 
+            if (colorGroupController == null)
+                colorGroupController = FindObjectOfType<ColorGroupController>();
+
             useTextureMode = textureRenderer != null;
 
             
@@ -82,6 +86,15 @@ namespace GlobalGameJam
                 if (Keyboard.current.mKey.wasPressedThisFrame)
                 {
                     SetMapMode(!isMapMode);
+                }
+
+                if (Keyboard.current.eKey.wasPressedThisFrame)
+                {
+                    if (colorGroupController != null)
+                        colorGroupController.ToggleR();
+
+                    if (isMapMode)
+                        TryToggleWall();
                 }
             }
 
@@ -123,11 +136,6 @@ namespace GlobalGameJam
                 }
             }
 
-            // Action (E)
-            if (Keyboard.current != null && Keyboard.current.eKey.wasPressedThisFrame)
-            {
-                TryToggleWall();
-            }
         }
 
         private void SetMapMode(bool enabled)

@@ -6,7 +6,7 @@ namespace GlobalGameJam
     public class MinimapGhostLayer : MonoBehaviour
     {
         [Header("Settings")]
-        [SerializeField] private int maskSize = 9;
+        [SerializeField] private int maskSize = 1;
         [SerializeField] private Color maskColor = new Color(0, 1, 0, 0.3f);
         [SerializeField] private Color activeColor = new Color(1, 0, 0, 0.3f);
         
