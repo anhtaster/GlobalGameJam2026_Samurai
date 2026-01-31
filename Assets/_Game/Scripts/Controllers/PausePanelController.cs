@@ -32,31 +32,21 @@ public class PausePanelController : MonoBehaviour
 
     void Update()
     {
+        // Quan trọng: Kiểm tra IsPaused static
         if (!IsPaused || Keyboard.current == null) return;
 
-        // Kiểm tra phím Lên (Mũi tên lên hoặc phím W)
-        bool upPressed = Keyboard.current.upArrowKey.wasPressedThisFrame || 
-                        (Keyboard.current.wKey != null && Keyboard.current.wKey.wasPressedThisFrame);
-
-        // Kiểm tra phím Xuống (Mũi tên xuống hoặc phím S)
-        bool downPressed = Keyboard.current.downArrowKey.wasPressedThisFrame || 
-                        (Keyboard.current.sKey != null && Keyboard.current.sKey.wasPressedThisFrame);
-
-        bool confirmPressed = Keyboard.current.enterKey.wasPressedThisFrame || 
-                             Keyboard.current.spaceKey.wasPressedThisFrame;
-
-        if (upPressed)
+        if (Keyboard.current.upArrowKey.wasPressedThisFrame || Keyboard.current.wKey.wasPressedThisFrame)
         {
             currentIndex = (currentIndex - 1 + menuOptions.Length) % menuOptions.Length;
             UpdateArrows();
         }
-        else if (downPressed)
+        else if (Keyboard.current.downArrowKey.wasPressedThisFrame || Keyboard.current.sKey.wasPressedThisFrame)
         {
             currentIndex = (currentIndex + 1) % menuOptions.Length;
             UpdateArrows();
         }
 
-        if (confirmPressed)
+        if (Keyboard.current.enterKey.wasPressedThisFrame || Keyboard.current.spaceKey.wasPressedThisFrame)
         {
             ConfirmSelection();
         }
@@ -65,8 +55,12 @@ public class PausePanelController : MonoBehaviour
     // Thêm hàm này để MinimapInteractionController gọi tới
     public void ResetMenu()
     {
+        Debug.Log("[PausePanelController] ResetMenu() called");
+        IsPaused = true; 
         currentIndex = 0;
+        this.gameObject.SetActive(true); // Đảm bảo Panel hiện lên
         UpdateArrows();
+        Debug.Log("[PausePanelController] Pause menu reset and active");
     }
 
     void UpdateArrows()
@@ -98,21 +92,26 @@ public class PausePanelController : MonoBehaviour
 
     void ConfirmSelection()
     {
+        Debug.Log($"[PausePanelController] ConfirmSelection() called, currentIndex={currentIndex}");
         var master = FindFirstObjectByType<GlobalGameJam.MinimapInteractionController>();
         if (master == null) return;
 
         if (currentIndex == 0) // Resume
         {
+            Debug.Log("[PausePanelController] Resume selected");
             master.SetPauseMode(false);
         }
         else if (currentIndex == 1) // Setting
         {
-            // GỌI HÀM NÀY: Nó sẽ xử lý tắt Pause, bật Setting và cắm cờ logic
-            master.EnterSettingFromPause(); 
+            Debug.Log("[PausePanelController] Setting selected from Pause");
+            // Gọi UIController để mở Setting từ Pause
+            UIController.Instance.OpenSettings(true);
         }
         else if (currentIndex == 2) // Main Menu
         {
-            this.gameObject.SetActive(false); // Ẩn Pause Panel
+            Debug.Log("[PausePanelController] Main Menu selected from Pause");
+            master.ReturnToMainMenu(); // Gọi hàm reset ở Master
+            this.gameObject.SetActive(false); 
             if (mainMenuPanel != null) 
             {
                 mainMenuPanel.SetActive(true);

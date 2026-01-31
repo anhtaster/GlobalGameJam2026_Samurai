@@ -1,86 +1,151 @@
 using UnityEngine;
-using TMPro;
-using UnityEngine.UI;
-using UnityEngine.Audio;
-using System.Collections.Generic;
-using UnityEngine.SceneManagement;
 
 public class UIController : MonoBehaviour
 {
+    public static UIController Instance { get; private set; }
+
     [Header("Panels")]
-    public GameObject mainMenuPanel;
-    public GameObject settingsPanel;
-    public GameObject pausePanel;
+    public MainMenuController mainMenuPanel;
+    public SettingPanelController settingPanel;
+    public CreditPanelController creditPanel;
+    public PausePanelController pausePanel; // Đổi thành script để gọi hàm Reset
 
-    [Header("Resolution")]
-    public TMP_Dropdown resDropdown;
-    private Resolution[] resolutions;
+    // Enum để track panel trước đó
+    private enum PreviousPanel { None, MainMenu, Pause }
+    private PreviousPanel previousPanel = PreviousPanel.None;
 
-    [Header("Audio")]
-    public AudioMixer mainMixer;
+    // Static property để các script khác biết có panel nào đang mở
+    public static bool IsAnyPanelOpen { get; private set; } = false;
 
-    void Start()
+    private void Start()
     {
-        // Lấy danh sách Resolution hỗ trợ từ phần cứng
-        resolutions = Screen.resolutions;
-        resDropdown.ClearOptions();
+        // Gọi hàm này để đóng tất cả các panel khác và chỉ bật Main Menu
+        OpenMainMenu();
+    }
+    private void Awake()
+    {
+        if (Instance == null) Instance = this;
+        else Destroy(gameObject);
+    }
 
-        List<string> options = new List<string>();
-        int currentResIndex = 0;
-
-        for (int i = 0; i < resolutions.Length; i++)
+    public void OpenMainMenu()
+    {
+        Debug.Log("[UIController] OpenMainMenu() called");
+        CloseAll(); // Tắt tất cả các panel khác (Settings, Credits, Pause)
+        if (mainMenuPanel != null)
         {
-            string option = resolutions[i].width + " x " + resolutions[i].height;
-            options.Add(option);
-
-            if (resolutions[i].width == Screen.currentResolution.width &&
-                resolutions[i].height == Screen.currentResolution.height)
-            {
-                currentResIndex = i;
-            }
+            mainMenuPanel.gameObject.SetActive(true);
+            mainMenuPanel.SetMenuActive(true); // QUAN TRỌNG: Để bật biến isActive nhận phím bấm
+            Debug.Log("[UIController] Main Menu Panel opened");
         }
-
-        resDropdown.AddOptions(options);
-        resDropdown.value = currentResIndex;
-        resDropdown.RefreshShownValue();
+        IsAnyPanelOpen = true; // Đánh dấu có panel đang mở
     }
 
-    // Hàm đổi độ phân giải (Gán vào OnValueChanged của Dropdown)
-    public void SetResolution(int index)
+    public void OpenSettings(bool fromPause)
     {
-        Resolution res = resolutions[index];
-        Screen.SetResolution(res.width, res.height, FullScreenMode.Windowed);
+        Debug.Log($"[UIController] OpenSettings(fromPause={fromPause}) called");
+        // Lưu lại panel trước đó
+        previousPanel = fromPause ? PreviousPanel.Pause : PreviousPanel.MainMenu;
+        Debug.Log($"[UIController] Previous panel set to: {previousPanel}");
+        
+        CloseAll();
+        // Bật parent GameObject trước
+        if (settingPanel != null)
+        {
+            settingPanel.gameObject.SetActive(true);
+            Debug.Log("[UIController] Setting Panel parent GameObject enabled");
+        }
+        // SetPanelActive sẽ tự động bật GameObject bên trong
+        settingPanel.SetPanelActive(true);
+        Debug.Log("[UIController] Setting Panel opened");
+        IsAnyPanelOpen = true; // Đánh dấu có panel đang mở
     }
 
-    // --- Điều hướng Menu ---
-    public void PlayGame() => SceneManager.LoadScene("GameScene");
-    
-    public void OpenSettings() 
+    public void OpenCredits()
     {
-        settingsPanel.SetActive(true);
-        if(mainMenuPanel != null) mainMenuPanel.SetActive(false);
+        Debug.Log("[UIController] OpenCredits() called");
+        // Lưu lại panel trước đó (Credit chỉ mở từ Main Menu)
+        previousPanel = PreviousPanel.MainMenu;
+        
+        CloseAll();
+        // Bật parent GameObject trước
+        if (creditPanel != null)
+        {
+            creditPanel.gameObject.SetActive(true);
+            Debug.Log("[UIController] Credit Panel parent GameObject enabled");
+        }
+        // SetPanelActive sẽ tự động bật GameObject bên trong
+        creditPanel.SetPanelActive(true);
+        Debug.Log("[UIController] Credit Panel opened");
+        IsAnyPanelOpen = true; // Đánh dấu có panel đang mở
+        Debug.Log($"[UIController] IsAnyPanelOpen set to TRUE (Credit Panel)");
     }
 
-    public void CloseSettings() 
+    public void OpenPauseMenu()
     {
-        settingsPanel.SetActive(false);
-        // Nếu đang ở MainMenu thì hiện lại MainMenu, nếu đang Pause thì thôi
-        if (SceneManager.GetActiveScene().name == "MainMenuScene") 
-            mainMenuPanel.SetActive(true);
+        Debug.Log("[UIController] OpenPauseMenu() called");
+        CloseAll();
+        pausePanel.gameObject.SetActive(true);
+        pausePanel.ResetMenu(); // Gọi hàm reset để bật isActive/IsPaused
+        Debug.Log("[UIController] Pause Panel opened");
+        IsAnyPanelOpen = true; // Đánh dấu có panel đang mở
     }
 
-    public void QuitGame() => Application.Quit();
-
-    // Hàm này gán vào OnValueChanged của Slider Music
-    public void SetMusicVolume(float value)
+    public void CloseSettingsAndReturnToPrevious()
     {
-        // Công thức logarit để âm thanh giảm mượt mà (value từ 0.0001 đến 1)
-        mainMixer.SetFloat("MusicVol", Mathf.Log10(value) * 20);
+        Debug.Log($"[UIController] CloseSettingsAndReturnToPrevious() called, previousPanel={previousPanel}");
+        
+        // Tắt Setting Panel trước khi quay về
+        if (settingPanel != null)
+        {
+            settingPanel.SetPanelActive(false);
+            settingPanel.gameObject.SetActive(false);
+            Debug.Log("[UIController] Setting Panel closed");
+        }
+        
+        // Quay về panel trước đó
+        if (previousPanel == PreviousPanel.Pause)
+        {
+            Debug.Log("[UIController] Returning to Pause Panel");
+            OpenPauseMenu();
+        }
+        else
+        {
+            Debug.Log("[UIController] Returning to Main Menu");
+            OpenMainMenu();
+        }
+        
+        previousPanel = PreviousPanel.None;
     }
 
-    // Hàm này gán vào OnValueChanged của Slider SFX
-    public void SetSFXVolume(float value)
+    public void CloseCreditAndReturnToPrevious()
     {
-        mainMixer.SetFloat("SFXVol", Mathf.Log10(value) * 20);
+        Debug.Log("[UIController] CloseCreditAndReturnToPrevious() called");
+        
+        // Tắt Credit Panel trước khi quay về
+        if (creditPanel != null)
+        {
+            creditPanel.SetPanelActive(false);
+            creditPanel.gameObject.SetActive(false);
+            Debug.Log("[UIController] Credit Panel closed");
+        }
+        
+        // Credit chỉ mở từ Main Menu
+        Debug.Log("[UIController] Returning to Main Menu from Credit");
+        OpenMainMenu();
+        previousPanel = PreviousPanel.None;
+    }
+
+    public void CloseAll()
+    {
+        Debug.Log("[UIController] CloseAll() called - closing Main Menu and Pause only");
+        mainMenuPanel.SetMenuActive(false);
+        // KHÔNG tắt Setting và Credit Panel - chúng tự quản lý
+        if(pausePanel != null) pausePanel.gameObject.SetActive(false);
+        
+        // Mặc định Resume thời gian, các panel mở sau sẽ tự dừng lại nếu cần
+        Time.timeScale = 1f;
+        IsAnyPanelOpen = false; // Đánh dấu không còn panel nào mở
+        Debug.Log("[UIController] Main Menu and Pause closed, IsAnyPanelOpen=false");
     }
 }

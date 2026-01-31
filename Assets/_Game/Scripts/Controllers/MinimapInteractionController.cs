@@ -45,6 +45,9 @@ namespace GlobalGameJam
 
         private bool isMapMode = false;
         private bool useTextureMode = false;
+        private bool hasGameStarted = false;
+
+        public bool HasGameStarted => hasGameStarted;
 
         private void Start()
         {
@@ -65,9 +68,9 @@ namespace GlobalGameJam
 
             useTextureMode = textureRenderer != null;
 
-            if (settingController == null)
+            if (settingController != null)
             {
-                settingController = GetComponentInChildren<SettingPanelController>(true);
+                settingController.OnSettingClosed += HandleSettingClosedInGame;
             }
 
             
@@ -86,46 +89,105 @@ namespace GlobalGameJam
             }
         }
 
+        public void ReturnToMainMenu()
+        {
+            hasGameStarted = false; // Reset trạng thái game
+            isPaused = false;
+            isSetting = false;
+            Time.timeScale = 0f; // Vẫn dừng thời gian vì đang ở Menu
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+        }
+
+        private void HandleSettingClosedInGame()
+        {
+            isSetting = false;
+            if (hasGameStarted)
+            {
+                // Quay lại Pause
+                isPaused = true;
+                PausePanelController.IsPaused = true;
+                UIController.Instance.OpenPauseMenu();
+            }
+        }
+
+        private void OnDestroy()
+        {
+            if (settingController != null)
+            {
+                settingController.OnSettingClosed -= HandleSettingClosedInGame;
+            }
+        }
+
         private void Update()
         {
             if (Keyboard.current == null) return;
 
-            if (!isSetting && Keyboard.current != null && Keyboard.current.escapeKey.wasPressedThisFrame)
+            // 1. Phím ESC phải luôn được ưu tiên xử lý
+            if (hasGameStarted && Keyboard.current.escapeKey.wasPressedThisFrame)
             {
-                SetPauseMode(!isPaused);
+                // Nếu đang ở Setting thì thoát Setting về Pause
+                if (isSetting)
+                {
+                    settingController.BackToPreviousMenu();
+                }
+                else // Nếu đang chơi hoặc đang Pause thì Toggle
+                {
+                    TogglePause();
+                }
+                return;
             }
 
-            if (isPaused || isSetting) return;
+            // 2. Nếu đang mở bất kỳ Panel UI nào thì KHÔNG xử lý phím di chuyển nhân vật
+            if (UIController.Instance != null && UIController.IsAnyPanelOpen)
+            {
+                Debug.Log("[MinimapInteractionController] Player input BLOCKED - IsAnyPanelOpen=true");
+                return;
+            }
+            
             HandleInput();
+        }
+
+        public void TogglePause()
+        {
+            isPaused = !isPaused;
+            PausePanelController.IsPaused = isPaused; 
+
+            if (isPaused)
+            {
+                UIController.Instance.OpenPauseMenu();
+            }
+            else
+            {
+                UIController.Instance.CloseAll();
+            }
+        }
+
+        public void StartGame()
+        {
+            hasGameStarted = true;
+            SetPauseMode(false);
         }
 
         public void SetPauseMode(bool enabled)
         {
-            if (isPaused == enabled) return;
-            isPaused = enabled;
+            if (!hasGameStarted && enabled) return; 
 
-            // Cập nhật biến static để Script Menu biết đường mà chạy
-            PausePanelController.IsPaused = enabled; 
-
-            if (pausePanel != null) pausePanel.SetActive(isPaused);
-
-            if (isPaused)
+            if (enabled)
             {
-                if (playerInput != null) playerInput.DeactivateInput();
-                foreach (var script in scriptsToDisable) if (script != null) script.enabled = false;
+                UIController.Instance.OpenPauseMenu(); // Gọi UI Manager thay vì tự bật Panel
                 Time.timeScale = 0f;
-
-                // Ép Menu cập nhật vị trí mũi tên ngay khi vừa mở
-                var menu = pausePanel.GetComponent<PausePanelController>();
-                if (menu != null) menu.ResetMenu(); 
+                Cursor.lockState = CursorLockMode.None;
+                Cursor.visible = true;
             }
             else
             {
-                if (playerInput != null) playerInput.ActivateInput();
-                foreach (var script in scriptsToDisable) if (script != null) script.enabled = true;
+                UIController.Instance.CloseAll();
                 Time.timeScale = 1f;
+                Cursor.lockState = CursorLockMode.Locked;
+                Cursor.visible = false;
             }
-}
+        }
 
         private void HandleInput()
         {
@@ -315,16 +377,9 @@ namespace GlobalGameJam
 
         public void EnterSettingFromPause()
         {
-            isSetting = true;   // Kích hoạt chế độ Setting
-            isPaused = false;    // Tạm thời tắt cờ IsPaused để logic Update của Controller không nhận Esc nữa
-            
-            if (pausePanel != null) pausePanel.SetActive(false);
-            
-            if (settingController != null)
-            {
-                // Gọi SetPanelActive(true) để bật cả GameObject và biến isOpen bên kia
-                settingController.SetPanelActive(true);
-            }
+            isSetting = true;
+            isPaused = false; // Tạm tắt để Setting chiếm quyền Input
+            UIController.Instance.OpenSettings(true);
         }
 
         public void ExitSettingToPause()

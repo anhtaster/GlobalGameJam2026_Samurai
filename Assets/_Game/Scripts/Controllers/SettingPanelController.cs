@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
@@ -20,6 +21,8 @@ public class SettingPanelController : MonoBehaviour
 
     private int currentIndex = 0;
     private bool isOpen = false;
+
+    public event Action OnSettingClosed;
 
     void Start()
     {
@@ -61,16 +64,20 @@ public class SettingPanelController : MonoBehaviour
 
     public void SetPanelActive(bool active)
     {
+        Debug.Log($"[SettingPanelController] SetPanelActive({active}) called");
         isOpen = active;
-        settingsPanel.SetActive(active);
+        if (settingsPanel != null) settingsPanel.SetActive(active);
         
         if (active) 
         {
-            currentIndex = 0; // Reset về mục đầu tiên khi mở
-            UpdateSelectionVisuals(); // Cập nhật màu sắc ngay lập tức
-            
-            // Đảm bảo Time.timeScale bằng 0 để khớp với logic Pause
-            Time.timeScale = 0f; 
+            currentIndex = 0;
+            UpdateSelectionVisuals();
+            Time.timeScale = 0f;
+            Debug.Log("[SettingPanelController] Setting Panel is now active");
+        }
+        else
+        {
+            Debug.Log("[SettingPanelController] Setting Panel is now inactive");
         }
     }
 
@@ -128,16 +135,23 @@ public class SettingPanelController : MonoBehaviour
         }
     }
 
-    public void BackToPauseMenu()
+    public void BackToPreviousMenu()
     {
-        // 1. Ẩn chính nó và tắt logic nhận phím mũi tên
-        this.SetPanelActive(false); 
-        
-        // 2. Báo cho Master Controller để quay lại Pause
-        var master = FindFirstObjectByType<GlobalGameJam.MinimapInteractionController>();
-        if (master != null)
-        {
-            master.ExitSettingToPause();
-        }
+        Debug.Log("[SettingPanelController] BackToPreviousMenu() called");
+        // Gọi UIController để quay về panel trước đó
+        UIController.Instance.CloseSettingsAndReturnToPrevious();
     }
+
+    // public void BackToPauseMenu()
+    // {
+    //     // 1. Ẩn chính nó và tắt logic nhận phím mũi tên
+    //     this.SetPanelActive(false); 
+        
+    //     // 2. Báo cho Master Controller để quay lại Pause
+    //     var master = FindFirstObjectByType<GlobalGameJam.MinimapInteractionController>();
+    //     if (master != null)
+    //     {
+    //         master.ExitSettingToPause();
+    //     }
+    // }
 }
