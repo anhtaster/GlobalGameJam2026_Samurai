@@ -19,6 +19,8 @@ namespace GlobalGameJam
 
         [Header("Mode")]
         [SerializeField] private bool alwaysHoldingMap = true;
+        [SerializeField] private GameObject arm2Model;
+        [SerializeField] private TutorialProgressionModel progressionModel;
 
         private Animator animator;
         private bool isMapOpen = false;
@@ -72,7 +74,16 @@ namespace GlobalGameJam
                 mapSheetRenderer = GetComponentInChildren<MapSheetRenderer>(true);
             }
 
-            if (alwaysHoldingMap && animator != null)
+            // Check if map model should be hidden for tutorial
+            if (progressionModel != null && !progressionModel.isMapModelUnlocked)
+            {
+                if (arm2Model != null)
+                {
+                    arm2Model.SetActive(false);
+                    Debug.Log("[MapController] Arm2 model hidden - waiting for map pickup");
+                }
+            }
+            else if (alwaysHoldingMap && animator != null)
             {
                 animator.SetBool(holdingMapParameter, true);
                 isMapOpen = true;
@@ -255,6 +266,48 @@ namespace GlobalGameJam
             if (mapSheetRenderer != null)
             {
                 mapSheetRenderer.HideMap();
+            }
+        }
+
+        /// <summary>
+        /// Enable Arm2 model when player picks up map in tutorial
+        /// </summary>
+        public void EnableMapModel()
+        {
+            if (arm2Model != null)
+            {
+                arm2Model.SetActive(true);
+                Debug.Log("[MapController] Arm2 model enabled - map picked up!");
+                
+                // Set animator to holding state
+                if (alwaysHoldingMap && animator != null)
+                {
+                    animator.SetBool(holdingMapParameter, true);
+                    isMapOpen = true;
+                    isTransitioning = false;
+                }
+
+                // Re-find MapSheetRenderer after enabling arm2Model
+                if (mapSheetRenderer == null)
+                {
+                    mapSheetRenderer = GetComponentInChildren<MapSheetRenderer>(true);
+                }
+
+                // Show map sheet immediately (no delay)
+                if (mapSheetRenderer != null)
+                {
+                    mapSheetRenderer.ShowMap();
+                    mapVisible = true;
+                    Debug.Log("[MapController] Map sheet shown immediately after pickup");
+                }
+                else
+                {
+                    Debug.LogWarning("[MapController] MapSheetRenderer not found after enabling Arm2!");
+                }
+            }
+            else
+            {
+                Debug.LogWarning("[MapController] Arm2 model reference is null!");
             }
         }
     }

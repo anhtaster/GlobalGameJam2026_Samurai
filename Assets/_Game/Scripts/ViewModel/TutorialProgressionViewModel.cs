@@ -21,11 +21,13 @@ namespace GlobalGameJam
         [SerializeField] private float followUpNarratorDuration = 5f;
 
         // Events
+        public event Action OnMapModelUnlocked;
         public event Action OnMinimapUnlocked;
         public event Action OnMapToggleUnlocked;
         public event Action OnGlassesUnlocked;
 
         // Public accessors
+        public bool IsMapModelUnlocked => model != null && model.isMapModelUnlocked;
         public bool IsMinimapUnlocked => model != null && model.isMinimapUnlocked;
         public bool IsMapToggleUnlocked => model != null && model.isMapToggleUnlocked;
         public bool IsGlassesUnlocked => model != null && model.isGlassesUnlocked;
@@ -75,6 +77,32 @@ namespace GlobalGameJam
                 Debug.Log("[TutorialProgressionViewModel] Invoking OnMinimapUnlocked event...");
                 OnMinimapUnlocked?.Invoke();
                 Debug.Log($"[TutorialProgressionViewModel] OnMinimapUnlocked invoked. Subscriber count: {(OnMinimapUnlocked != null ? OnMinimapUnlocked.GetInvocationList().Length : 0)}");
+            }
+        }
+
+        public void UnlockMapModel(string narratorText = null, AudioClip narratorClip = null)
+        {
+            if (model == null) return;
+
+            if (!model.isMapModelUnlocked)
+            {
+                model.isMapModelUnlocked = true;
+                Debug.Log("[TutorialProgressionViewModel] Map Model Unlocked!");
+
+                // Show minimap panel when map is picked up
+                if (minimapPanel != null)
+                {
+                    minimapPanel.SetActive(true);
+                    Debug.Log("[TutorialProgressionViewModel] Minimap panel shown with map pickup");
+                }
+
+                // Play narrator
+                if (tutorialViewModel != null && !string.IsNullOrEmpty(narratorText))
+                {
+                    tutorialViewModel.PlayNarrative(narratorText, narratorClip, 5f);
+                }
+
+                OnMapModelUnlocked?.Invoke();
             }
         }
 

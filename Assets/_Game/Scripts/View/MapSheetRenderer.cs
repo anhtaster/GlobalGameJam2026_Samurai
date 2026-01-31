@@ -18,6 +18,8 @@ namespace GlobalGameJam
         [SerializeField] private string texturePropertyName = "_MainTex";
         [SerializeField] private bool applyMinimapTexture = true;
 
+        private bool isVisible = false;
+
         private void Start()
         {
             // Tự động tìm nếu chưa gán
@@ -42,8 +44,16 @@ namespace GlobalGameJam
                 RefreshTexture();
             }
 
-            // Map luôn active, chỉ ẩn renderer
-            HideMap();
+            // Only hide map if not already shown
+            if (!isVisible)
+            {
+                HideMap();
+                Debug.Log("[MapSheetRenderer] Start() - Map hidden initially");
+            }
+            else
+            {
+                Debug.Log("[MapSheetRenderer] Start() - Map already visible, skipping hide");
+            }
         }
 
         public void ShowMap()
@@ -54,13 +64,18 @@ namespace GlobalGameJam
                 if (renderer != null)
                 {
                     renderer.enabled = true;
+                    Debug.Log($"[MapSheetRenderer] Enabled renderer: {renderer.name}");
                 }
             }
+
+            isVisible = true;
 
             if (applyMinimapTexture)
             {
                 RefreshTexture();
             }
+            
+            Debug.Log("[MapSheetRenderer] ShowMap() completed");
         }
 
         public void HideMap()
@@ -71,8 +86,13 @@ namespace GlobalGameJam
                 if (renderer != null)
                 {
                     renderer.enabled = false;
+                    Debug.Log($"[MapSheetRenderer] Disabled renderer: {renderer.name}");
                 }
             }
+
+            isVisible = false;
+            
+            Debug.Log("[MapSheetRenderer] HideMap() completed");
         }
 
         public void RefreshTexture()

@@ -8,6 +8,7 @@ namespace GlobalGameJam
     {
         public enum PickupType
         {
+            MapModel,
             Minimap,
             MapToggle,
             Glasses
@@ -45,7 +46,7 @@ namespace GlobalGameJam
             // Auto-find ViewModel if not assigned
             if (progressionViewModel == null)
             {
-                progressionViewModel = FindObjectOfType<TutorialProgressionViewModel>();
+                progressionViewModel = FindFirstObjectByType<TutorialProgressionViewModel>();
             }
 
             if (progressionViewModel == null)
@@ -56,7 +57,7 @@ namespace GlobalGameJam
             // Auto-find MinimapPickupMarker if not assigned
             if (minimapMarker == null)
             {
-                minimapMarker = FindObjectOfType<MinimapPickupMarker>();
+                minimapMarker = FindFirstObjectByType<MinimapPickupMarker>();
             }
 
             // Subscribe to unlock events for sequential marker appearance
@@ -201,6 +202,16 @@ namespace GlobalGameJam
             // Call appropriate unlock method
             switch (pickupType)
             {
+                case PickupType.MapModel:
+                    progressionViewModel.UnlockMapModel(narratorText, narratorClip);
+                    // Enable Arm2 model
+                    var mapController = FindFirstObjectByType<MapController>();
+                    if (mapController != null)
+                    {
+                        mapController.EnableMapModel();
+                    }
+                    break;
+
                 case PickupType.Minimap:
                     progressionViewModel.UnlockMinimap(narratorText, narratorClip);
                     break;

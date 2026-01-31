@@ -6,6 +6,7 @@ namespace GlobalGameJam
     public class TutorialProgressionModel : ScriptableObject
     {
         [Header("Unlock States")]
+        public bool isMapModelUnlocked = false;
         public bool isMinimapUnlocked = false;
         public bool isMapToggleUnlocked = false;
         public bool isGlassesUnlocked = false;
@@ -15,6 +16,7 @@ namespace GlobalGameJam
         /// </summary>
         public void ResetProgress()
         {
+            isMapModelUnlocked = false;
             isMinimapUnlocked = false;
             isMapToggleUnlocked = false;
             isGlassesUnlocked = false;
