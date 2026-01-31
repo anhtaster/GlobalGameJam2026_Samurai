@@ -58,5 +58,19 @@ namespace GlobalGameJam
         {
             return cellData;
         }
+
+        public void SetVisualOverride(bool active, Color overrideColor)
+        {
+            if (cellImage == null) return;
+
+            if (active)
+            {
+                cellImage.color = overrideColor;
+            }
+            else
+            {
+                UpdateVisual(); // Revert to normal
+            }
+        }
     }
 }

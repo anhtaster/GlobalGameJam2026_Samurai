@@ -20,6 +20,10 @@ namespace GlobalGameJam
         public MinimapGridModel GridModel => gridModel;
         public MinimapColorConfig ColorConfig => colorConfig;
 
+        public int CurrentWidth { get; private set; }
+        public int CurrentHeight { get; private set; }
+        public float CellUISize => cellUISize;
+
         private void Awake()
         {
             if (gridLayout == null)
@@ -64,6 +68,9 @@ namespace GlobalGameJam
 
             // Setup grid layout with custom size
             SetupGridLayout(width);
+
+            CurrentWidth = width;
+            CurrentHeight = height;
 
             // Create cell views with custom size
             // Important: Store cells by VISUAL position (viewX, viewY) not grid position
@@ -213,6 +220,15 @@ namespace GlobalGameJam
         private void OnDestroy()
         {
             ClearGrid();
+        }
+
+        public void SetCellColorOverride(Vector2Int gridPos, bool active, Color color)
+        {
+            MinimapCellView cellView = GetCellView(gridPos);
+            if (cellView != null)
+            {
+                cellView.SetVisualOverride(active, color);
+            }
         }
     }
 }

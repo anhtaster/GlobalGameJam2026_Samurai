@@ -18,9 +18,41 @@ namespace GlobalGameJam
         [SerializeField] private int viewportWidth = 12;
         [SerializeField] private int viewportHeight = 12;
 
+        [Header("Rotation Settings")]
+        [SerializeField] private Transform rotationTarget; // Assign the Grid Container here
+
         private void Start()
         {
             Initialize();
+        }
+
+        private void Update()
+        {
+            RotateMinimap();
+        }
+
+        private void RotateMinimap()
+        {
+            if (playerTransform == null) return;
+
+            Transform target = rotationTarget;
+            if (target == null && gridView != null)
+            {
+                target = gridView.transform;
+            }
+
+            if (target != null)
+            {
+                // Rotate opposite to player to keep North Up? Or follow player?
+                // User said "rotate according to player view". 
+                // Usually this means Map's Z rotation = Player's Y rotation.
+                // So if Player turns 90deg Right, Map turns 90deg Left to keep "Forward" Up?
+                // OR Map turns 90deg Right so "Forward" is East?
+                // Let's stick to: Map Roation = Player Rotation. 
+                // So if Player Y = 90, Map Z = 90.
+                float playerY = playerTransform.eulerAngles.y;
+                target.rotation = Quaternion.Euler(0, 0, playerY);
+            }
         }
 
         public void Initialize()

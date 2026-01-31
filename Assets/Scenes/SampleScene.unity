@@ -7110,6 +7110,73 @@ Mesh:
       - serializedVersion: 1
         m_IndexStart: 0
         m_IndexCount: 0
+--- !u!1 &292998782
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 292998785}
+  - component: {fileID: 292998784}
+  - component: {fileID: 292998783}
+  m_Layer: 0
+  m_Name: MinimapInteractionController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &292998783
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 292998782}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f6764f457bd97e428fcba62458e0a3c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GlobalGameJam.WallToggleService
+  gridModel: {fileID: 11400000, guid: 63f301ece8eaa514eaf037827d03645b, type: 2}
+  unsafeLayers:
+    serializedVersion: 2
+    m_Bits: 8
+  checkHalfExtents: {x: 0.4, y: 1, z: 0.4}
+--- !u!114 &292998784
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 292998782}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b89e8f6f33579f24ca683c81e28498d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GlobalGameJam.MinimapInteractionController
+  gridView: {fileID: 733761069}
+  wallToggleService: {fileID: 292998783}
+  ghostLayer: {fileID: 733761071}
+  currentCursorPos: {x: 0, y: 0}
+  navigationCooldown: 0.15
+--- !u!4 &292998785
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 292998782}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &312647174 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3511497307153291399, guid: e8feb2d034bfd3a40b6c262bcdb407f2, type: 3}
@@ -13431,6 +13498,7 @@ GameObject:
   - component: {fileID: 733761068}
   - component: {fileID: 733761069}
   - component: {fileID: 733761070}
+  - component: {fileID: 733761071}
   m_Layer: 5
   m_Name: GridContainer
   m_TagString: Untagged
@@ -13493,7 +13561,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b66242b693ea52045bd8ba09c6c98a75, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GlobalGameJam.MinimapGridView
-  gridModel: {fileID: 11400000, guid: 63f301ece8eaa514eaf037827d03645b, type: 2}
+  gridModel: {fileID: 0}
   colorConfig: {fileID: 11400000, guid: aea394f6cb319744cb27e38433cc9d93, type: 2}
   cellPrefab: {fileID: 2044715541140975160, guid: 912c1ad417c866140b3b31c07dddc06e, type: 3}
   gridLayout: {fileID: 733761068}
@@ -13512,6 +13580,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GlobalGameJam.MinimapUIDebugger
   gridView: {fileID: 733761069}
   canvas: {fileID: 494201001}
+--- !u!114 &733761071
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 733761066}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bf64799f7be671d4ba5e1fbde5ea577a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GlobalGameJam.MinimapGhostLayer
+  maskSize: 9
+  maskColor: {r: 0, g: 1, b: 0, a: 0.3}
+  activeColor: {r: 1, g: 0, b: 0, a: 0.3}
+  gridView: {fileID: 733761069}
 --- !u!1001 &739050896
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -28796,8 +28880,8 @@ MonoBehaviour:
   playerMarker: {fileID: 801634310}
   gridScanner: {fileID: 132760392}
   playerTransform: {fileID: 487506243}
-  viewportWidth: 12
-  viewportHeight: 12
+  viewportWidth: 10
+  viewportHeight: 10
 --- !u!4 &1408032833
 Transform:
   m_ObjectHideFlags: 0
@@ -41511,8 +41595,8 @@ MonoBehaviour:
   fullGridModel: {fileID: 11400000, guid: 63f301ece8eaa514eaf037827d03645b, type: 2}
   gridView: {fileID: 733761069}
   playerTransform: {fileID: 487506243}
-  viewportWidth: 10
-  viewportHeight: 10
+  viewportWidth: 12
+  viewportHeight: 12
   centerOnPlayer: 1
   updateEveryFrame: 0
   updateInterval: 0.1
@@ -47049,6 +47133,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: PlayerCapsule
       objectReference: {fileID: 0}
+    - target: {fileID: 8616685848737228372, guid: c5efc39a8aaf6e64ea40e9ad573e9b47, type: 3}
+      propertyPath: m_Layer
+      value: 3
+      objectReference: {fileID: 0}
     - target: {fileID: 8997996947095583982, guid: c5efc39a8aaf6e64ea40e9ad573e9b47, type: 3}
       propertyPath: m_RootOrder
       value: 2
@@ -47111,3 +47199,4 @@ SceneRoots:
   - {fileID: 710624934}
   - {fileID: 1408032833}
   - {fileID: 1968927569}
+  - {fileID: 292998785}
