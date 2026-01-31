@@ -18,6 +18,7 @@ namespace GlobalGameJam
 
         [Header("Cross-Controller References")]
         [SerializeField] private MapController mapController;
+        [SerializeField] private ColorGroupController colorGroupController;
 
         private Animator animator;
         private GlassesViewModel viewModel;
@@ -55,6 +56,12 @@ namespace GlobalGameJam
             if (mapController == null)
             {
                 mapController = FindFirstObjectByType<MapController>();
+            }
+
+            // Tìm ColorGroupController nếu chưa gán
+            if (colorGroupController == null)
+            {
+                colorGroupController = FindFirstObjectByType<ColorGroupController>();
             }
 
             // Tạo ViewModel từ Model
@@ -97,21 +104,6 @@ namespace GlobalGameJam
             // Bấm T để toggle kính
             if (Keyboard.current.tKey.wasPressedThisFrame)
             {
-                // Không cho bấm T khi đang mở map
-                if (mapController != null && animator != null)
-                {
-                    AnimatorStateInfo stateInfo = animator.GetCurrentAnimatorStateInfo(0);
-                    
-                    // Check nếu đang trong map animation thì không cho toggle glasses
-                    if (stateInfo.IsName("PullOutMap") || 
-                        stateInfo.IsName("HoldingMap") || 
-                        stateInfo.IsName("PutAwayMap"))
-                    {
-                        Debug.Log("[GlassesController] Cannot toggle glasses while using map");
-                        return;
-                    }
-                }
-
                 if (viewModel != null)
                 {
                     viewModel.ToggleGlasses();
@@ -124,12 +116,18 @@ namespace GlobalGameJam
         /// </summary>
         private void HandlePutOnGlasses()
         {
-            // Debug.Log("[GlassesController] Putting on glasses");
+            Debug.Log("[GlassesController] ✓ PUTTING ON GLASSES - Now wearing glasses");
             
             if (animator != null)
             {
                 animator.SetTrigger(putOnGlassesTrigger);
                 animator.SetBool(wearingGlassesBool, true);
+            }
+
+            // Notify color block controller to restore saved state
+            if (colorGroupController != null)
+            {
+                colorGroupController.OnGlassesPutOn();
             }
         }
 
@@ -138,12 +136,18 @@ namespace GlobalGameJam
         /// </summary>
         private void HandlePutOutGlasses()
         {
-            // Debug.Log("[GlassesController] Taking off glasses");
+            Debug.Log("[GlassesController] ✗ TAKING OFF GLASSES - No longer wearing glasses");
             
             if (animator != null)
             {
                 animator.SetTrigger(putOutGlassesTrigger);
                 animator.SetBool(wearingGlassesBool, false);
+            }
+
+            // Notify color block controller to hide all blocks
+            if (colorGroupController != null)
+            {
+                colorGroupController.OnGlassesPutOff();
             }
         }
 
