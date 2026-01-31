@@ -16,6 +16,8 @@ namespace GlobalGameJam
         [SerializeField] private float cellUISize = 30f;
 
         private Dictionary<Vector2Int, MinimapCellView> cellViews = new Dictionary<Vector2Int, MinimapCellView>();
+        // Reverse lookup: WorldGridPosition -> CellView (for fast O(1) lookup in SetCellColorOverride)
+        private Dictionary<Vector2Int, MinimapCellView> worldToViewportDict = new Dictionary<Vector2Int, MinimapCellView>();
 
         public MinimapGridModel GridModel => gridModel;
         public MinimapColorConfig ColorConfig => colorConfig;
@@ -227,29 +229,32 @@ namespace GlobalGameJam
             // First, try direct lookup (Local Coordinate)
             MinimapCellView cellView = GetCellView(gridPos);
             
-            // If not found, it might be a World Coordinate (from WallToggleService). 
-            // Iterate to find the matching Viewport Cell.
+            // If not found, use reverse lookup dictionary (O(1) instead of O(n) iteration)
             if (cellView == null)
             {
-                foreach (var view in cellViews.Values)
-                {
-                    if (view.WorldGridPosition == gridPos)
-                    {
-                        cellView = view;
-                        break;
-                    }
-                }
+                worldToViewportDict.TryGetValue(gridPos, out cellView);
             }
 
             if (cellView != null)
             {
                 cellView.SetVisualOverride(active, color);
             }
-            else
-            {
-                // Commented out log to avoid spam if target is outside Viewport
-                // Debug.LogWarning($"[MinimapGridView] SetCellColorOverride failed: No View found for {gridPos}");
-            }
+        }
+
+        /// <summary>
+        /// Register a cell's world position for reverse lookup (called by MinimapViewport)
+        /// </summary>
+        public void RegisterWorldPosition(Vector2Int worldPos, MinimapCellView cellView)
+        {
+            worldToViewportDict[worldPos] = cellView;
+        }
+
+        /// <summary>
+        /// Clear world position mappings (called before viewport refresh)
+        /// </summary>
+        public void ClearWorldPositionMappings()
+        {
+            worldToViewportDict.Clear();
         }
     }
 }

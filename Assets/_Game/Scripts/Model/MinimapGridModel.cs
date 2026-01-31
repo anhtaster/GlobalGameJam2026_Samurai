@@ -14,7 +14,10 @@ namespace GlobalGameJam
         [SerializeField] private Vector3 gridOrigin = Vector3.zero;
 
         [Header("Grid Data")]
-        [SerializeField] private List<MinimapCellData> cells = new List<MinimapCellData>();
+        // HideInInspector prevents Unity Editor crash when inspecting large grids
+        // The cells list can be very large (e.g., 100x100 = 10,000 entries) and
+        // trying to render it in Inspector causes freeze/crash
+        [SerializeField, HideInInspector] private List<MinimapCellData> cells = new List<MinimapCellData>();
 
         public int GridWidth => gridWidth;
         public int GridHeight => gridHeight;

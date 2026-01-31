@@ -11,6 +11,10 @@ namespace GlobalGameJam
 
         private MinimapCellData cellData;
         private MinimapColorConfig colorConfig;
+        
+        // Cached RectTransform for performance (avoid GetComponent every frame)
+        private RectTransform cachedRectTransform;
+        public RectTransform CachedRectTransform => cachedRectTransform;
 
         private void Awake()
         {
@@ -18,6 +22,8 @@ namespace GlobalGameJam
             {
                 cellImage = GetComponent<Image>();
             }
+            // Cache RectTransform once at Awake
+            cachedRectTransform = GetComponent<RectTransform>();
         }
 
         public void Initialize(MinimapCellData data, MinimapColorConfig config)
