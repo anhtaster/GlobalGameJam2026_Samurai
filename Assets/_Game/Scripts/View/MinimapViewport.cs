@@ -150,6 +150,13 @@ namespace GlobalGameJam
                     }
                 }
             }
+
+            // Re-apply yellow highlights for any hidden walls in this viewport
+            WallToggleService wallToggleService = FindObjectOfType<WallToggleService>();
+            if (wallToggleService != null)
+            {
+                wallToggleService.RefreshHighlights();
+            }
         }
 
         /// <summary>

@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace GlobalGameJam
@@ -20,16 +18,11 @@ namespace GlobalGameJam
         [SerializeField] private int viewportWidth = 12;
         [SerializeField] private int viewportHeight = 12;
 
-        [Header("Ghost Settings")]
-        [SerializeField] private MinimapGhostLayer ghostLayer;
-
         [Header("Rotation Settings")]
         [SerializeField] private Transform rotationTarget; // Assign the Grid Container here
 
-        private List<Vector2Int> highlightedPositions = new List<Vector2Int>();
-
-        public event Action<Vector2Int> PlayerViewPositionChanged;
-        public event Action<MinimapViewportData> ViewportDataChanged;
+        // Public property to expose current rotation for input correction
+        public float CurrentRotationAngle { get; private set; }
 
         private void Start()
         {
@@ -38,8 +31,7 @@ namespace GlobalGameJam
 
         private void Update()
         {
-            RotateMinimap();
-            HandleGhostInput(); 
+            // RotateMinimap(); // Disabled - map rotation feature removed
         }
 
         private void RotateMinimap()
@@ -63,6 +55,9 @@ namespace GlobalGameJam
                 // So if Player Y = 90, Map Z = 90.
                 float playerY = playerTransform.eulerAngles.y;
                 target.rotation = Quaternion.Euler(0, 0, playerY);
+                
+                // Store the current rotation for input correction
+                CurrentRotationAngle = playerY;
             }
         }
 
@@ -110,13 +105,6 @@ namespace GlobalGameJam
             }
         }
 
-        public void InitializeWithScan() 
-        {
-            // Quét cảnh trước rồi mới khởi tạo UI
-            ScanScene();
-            Initialize();
-        }
-
         [ContextMenu("Refresh Grid View")]
         public void RefreshGridView()
         {
@@ -124,11 +112,6 @@ namespace GlobalGameJam
             {
                 gridView.GenerateGrid(viewportWidth, viewportHeight);
             }
-        }
-
-        public void ForceRefresh()
-        {
-            RefreshGridView();
         }
 
         public void SetPlayerTransform(Transform player)
@@ -151,65 +134,6 @@ namespace GlobalGameJam
             {
                 gridView.UpdateCell(gridPos);
             }
-        }
-
-        public string GetPerformanceStats()
-        {
-            if (gridModel == null) return "No Model";
-            return $"{viewportWidth}x{viewportHeight} Viewport active";
-        }
-
-        private Vector2Int GetMouseGridPosition()
-        {
-            if (gridView == null) return Vector2Int.zero;
-
-            RectTransform rect = rotationTarget != null ? rotationTarget.GetComponent<RectTransform>() : gridView.GetComponent<RectTransform>();
-            
-            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(rect, Input.mousePosition, null, out Vector2 localPoint))
-            {
-                float width = rect.rect.width;
-                float height = rect.rect.height;
-
-                int x = Mathf.FloorToInt((localPoint.x + (width / 2)) / gridView.CellUISize);
-                int y = Mathf.FloorToInt(((height / 2) - localPoint.y) / gridView.CellUISize);
-
-                return new Vector2Int(Mathf.Clamp(x, 0, viewportWidth - 1), Mathf.Clamp(y, 0, viewportHeight - 1));
-            }
-            return Vector2Int.zero;
-        }
-
-        private void HandleGhostInput()
-        {
-            if (ghostLayer == null || gridView == null) return;
-
-            if (Input.GetMouseButtonDown(0))
-            {
-                ghostLayer.SetState(true);
-            }
-
-            if (Input.GetMouseButtonUp(0))
-            {
-                ghostLayer.SetState(false);
-                ClearAllHighlights();
-            }
-
-            if (!Input.GetMouseButton(0))
-            {
-                Vector2Int mouseGridPos = GetMouseGridPosition(); 
-                ghostLayer.UpdateCursorPosition(mouseGridPos, gridView.CellUISize);
-            }
-        }
-
-        private void ClearAllHighlights()
-        {
-            if (gridView == null) return;
-
-            foreach (var pos in highlightedPositions)
-            {
-                gridView.SetCellColorOverride(pos, false, Color.white);
-            }
-            
-            highlightedPositions.Clear();
         }
     }
 }
