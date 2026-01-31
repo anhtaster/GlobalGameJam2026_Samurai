@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace GlobalGameJam
@@ -20,6 +21,9 @@ namespace GlobalGameJam
 
         [Header("Rotation Settings")]
         [SerializeField] private Transform rotationTarget; // Assign the Grid Container here
+
+        public event Action<Vector2Int> PlayerViewPositionChanged;
+        public event Action<MinimapViewportData> ViewportDataChanged;
 
         private void Start()
         {
@@ -99,6 +103,13 @@ namespace GlobalGameJam
             }
         }
 
+        public void InitializeWithScan() 
+        {
+            // Quét cảnh trước rồi mới khởi tạo UI
+            ScanScene();
+            Initialize();
+        }
+
         [ContextMenu("Refresh Grid View")]
         public void RefreshGridView()
         {
@@ -106,6 +117,11 @@ namespace GlobalGameJam
             {
                 gridView.GenerateGrid(viewportWidth, viewportHeight);
             }
+        }
+
+        public void ForceRefresh()
+        {
+            RefreshGridView();
         }
 
         public void SetPlayerTransform(Transform player)
@@ -128,6 +144,12 @@ namespace GlobalGameJam
             {
                 gridView.UpdateCell(gridPos);
             }
+        }
+
+        public string GetPerformanceStats()
+        {
+            if (gridModel == null) return "No Model";
+            return $"{viewportWidth}x{viewportHeight} Viewport active";
         }
     }
 }

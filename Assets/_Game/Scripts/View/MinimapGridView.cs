@@ -10,6 +10,7 @@ namespace GlobalGameJam
         [SerializeField] private MinimapColorConfig colorConfig;
         [SerializeField] private GameObject cellPrefab;
         [SerializeField] private GridLayoutGroup gridLayout;
+        [SerializeField] private MinimapGridModel gridModel;
 
         [Header("Settings")]
         [SerializeField] private float cellUISize = 30f;
@@ -18,6 +19,7 @@ namespace GlobalGameJam
         private int currentWidth = -1;
         private int currentHeight = -1;
 
+        public MinimapGridModel GridModel => gridModel;
         public MinimapColorConfig ColorConfig => colorConfig;
 
         public int CurrentWidth { get; private set; }

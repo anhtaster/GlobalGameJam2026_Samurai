@@ -16,6 +16,8 @@ namespace GlobalGameJam
         private Image ghostImage;
         private Vector2Int currentGridPos;
 
+        public MinimapGridModel GridModel => gridView != null ? gridView.GridModel : null;
+
         public int MaskSize => maskSize;
 
         private void Awake()

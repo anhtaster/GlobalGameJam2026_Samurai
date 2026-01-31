@@ -157,5 +157,10 @@ namespace GlobalGameJam
                 markerImage.color = colorConfig.PlayerMarkerColor;
             }
         }
+
+        public void SetPlayerTransform(Transform player)
+        {
+            Debug.Log("Đã nhận Transform người chơi!");
+        }
     }
 }
