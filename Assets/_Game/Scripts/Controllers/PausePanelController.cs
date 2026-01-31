@@ -1,6 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
-using TMPro; // Nếu bạn dùng TextMeshPro
+using TMPro;
 
 public class PausePanelController : MonoBehaviour
 {
@@ -9,17 +9,12 @@ public class PausePanelController : MonoBehaviour
     public Color unselectedColor = new Color(1f, 1f, 1f, 0.4f);
 
     [Header("UI Elements")]
-    public RectTransform[] menuOptions; // Kéo 3 cái Text vào đây
-    public RectTransform leftArrow;     // Kéo mũi tên bên trái vào đây
-    public RectTransform rightArrow;    // Kéo mũi tên bên phải vào đây
+    public RectTransform[] menuButtons; // Kéo 3 cái Button vào đây (Resume, Setting, Main Menu)
 
     [Header("Panels")]
     public GameObject pausePanel;    // Panel Pause hiện tại
     public GameObject settingsPanel; // Kéo Setting Panel vào đây
     public GameObject mainMenuPanel;
-    
-    [Header("Settings")]
-    public float padding = 10f; // Khoảng cách từ mũi tên đến mép chữ
     
     private int currentIndex = 0;
 
@@ -27,7 +22,7 @@ public class PausePanelController : MonoBehaviour
 
     void Start()
     {
-        UpdateArrows();
+        UpdateVisuals();
     }
 
     void Update()
@@ -37,13 +32,13 @@ public class PausePanelController : MonoBehaviour
 
         if (Keyboard.current.upArrowKey.wasPressedThisFrame || Keyboard.current.wKey.wasPressedThisFrame)
         {
-            currentIndex = (currentIndex - 1 + menuOptions.Length) % menuOptions.Length;
-            UpdateArrows();
+            currentIndex = (currentIndex - 1 + menuButtons.Length) % menuButtons.Length;
+            UpdateVisuals();
         }
         else if (Keyboard.current.downArrowKey.wasPressedThisFrame || Keyboard.current.sKey.wasPressedThisFrame)
         {
-            currentIndex = (currentIndex + 1) % menuOptions.Length;
-            UpdateArrows();
+            currentIndex = (currentIndex + 1) % menuButtons.Length;
+            UpdateVisuals();
         }
 
         if (Keyboard.current.enterKey.wasPressedThisFrame || Keyboard.current.spaceKey.wasPressedThisFrame)
@@ -59,34 +54,25 @@ public class PausePanelController : MonoBehaviour
         IsPaused = true; 
         currentIndex = 0;
         this.gameObject.SetActive(true); // Đảm bảo Panel hiện lên
-        UpdateArrows();
+        UpdateVisuals();
         Debug.Log("[PausePanelController] Pause menu reset and active");
     }
 
-    void UpdateArrows()
+    void UpdateVisuals()
     {
-        if (menuOptions == null || menuOptions.Length == 0) return;
+        if (menuButtons == null || menuButtons.Length == 0) return;
 
-        for (int i = 0; i < menuOptions.Length; i++)
+        for (int i = 0; i < menuButtons.Length; i++)
         {
-            var tmpText = menuOptions[i].GetComponent<TextMeshProUGUI>();
-            if (i == currentIndex)
+            var tmpText = menuButtons[i].GetComponentInChildren<TextMeshProUGUI>();
+            bool isSelected = (i == currentIndex);
+            
+            // Cập nhật màu và scale giống như MainMenuController
+            if (tmpText != null) 
             {
-                // Mục được chọn: Sáng và To
-                if (tmpText != null) tmpText.color = selectedColor;
-                menuOptions[i].localScale = Vector3.one * 1.2f;
-
-                // Di chuyển mũi tên (giữ nguyên logic cũ của bạn)
-                float finalWidth = (tmpText != null ? tmpText.preferredWidth : menuOptions[i].rect.width) * menuOptions[i].localScale.x;
-                leftArrow.localPosition = new Vector3(menuOptions[i].localPosition.x - (finalWidth / 2f) - padding, menuOptions[i].localPosition.y, 0);
-                rightArrow.localPosition = new Vector3(menuOptions[i].localPosition.x + (finalWidth / 2f) + padding, menuOptions[i].localPosition.y, 0);
+                tmpText.color = isSelected ? selectedColor : unselectedColor;
             }
-            else
-            {
-                // Mục không được chọn: Mờ và Nhỏ
-                if (tmpText != null) tmpText.color = unselectedColor;
-                menuOptions[i].localScale = Vector3.one;
-            }
+            menuButtons[i].localScale = isSelected ? Vector3.one * 1.15f : Vector3.one;
         }
     }
 
