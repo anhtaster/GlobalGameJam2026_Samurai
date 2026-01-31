@@ -7,6 +7,7 @@ namespace GlobalGameJam
     {
         [Header("References")]
         [SerializeField] private MinimapGridView gridView;
+        [SerializeField] private MinimapGridViewModel viewModel;
         [SerializeField] private WallToggleService wallToggleService;
         [SerializeField] private MinimapGhostLayer ghostLayer;
         
@@ -68,38 +69,27 @@ namespace GlobalGameJam
                     else if (Keyboard.current.aKey.isPressed) inputVector.x = -1;
                 }
 
+                // Don't allow movement if current region is active (walls already hidden)
+                // But still allow E key to toggle it off!
+                if (inputVector != Vector2.zero && wallToggleService != null && wallToggleService.IsRegionActive)
+                {
+                    // Block WASD movement when in "red" state - must press E first to deselect
+                    return;
+                }
+
                 if (inputVector != Vector2.zero)
                 {
-                    // Apply Rotation Correction
-                    // If the Grid is rotated, we need to rotate our input vector to match the Grid's local axes.
-                    // Grid Delta = Inverse(GridRotation) * ScreenInput
-                    
-                    float gridRotationz = 0f;
-                    if (gridView != null && gridView.transform.parent != null) 
-                    {
-                        // Try to find the rotation. MinimapGridViewModel rotates the "container".
-                        // Logic: We need the Z rotation of the GridView itself (or its container).
-                        // Let's approximate by checking GridView's LossyScale or Rotation?
-                        // UI rotation is usually z-axis.
-                        gridRotationz = gridView.transform.eulerAngles.z; 
-                    }
+                    // Direct screen-relative movement (no rotation)
+                    // W = Up, S = Down, A = Left, D = Right
+                    // This works regardless of map rotation
+                    int moveX = Mathf.RoundToInt(inputVector.x);
+                    int moveY = Mathf.RoundToInt(inputVector.y);
 
-                    // Rotate input by -gridRotationz
-                    Quaternion rotation = Quaternion.Euler(0, 0, -gridRotationz);
-                    Vector3 rotatedInput = rotation * new Vector3(inputVector.x, inputVector.y, 0);
-
-                    // Round to nearest integer direction
-                    int moveX = Mathf.RoundToInt(rotatedInput.x);
-                    int moveY = Mathf.RoundToInt(rotatedInput.y);
-
-                    // Apply Inversions
+                    // Apply Inversions if needed
                     if (invertInputX) moveX = -moveX;
                     if (invertInputY) moveY = -moveY;
 
-                    // IMPORTANT: Coordinate System Adjustment
-                    // If Visual Up (Y+) corresponds to Grid Index DECREASE (Y-), we normally flip Y.
-                    // But "Rotated Input" logic tries to align Screen Up to Grid Up. 
-                    // Let's assume standard behavior first, and rely on Invert Flags for final tweaking.
+                    Debug.Log($"[MinimapInteraction] Input: {inputVector}, Final Move: ({moveX}, {moveY})");
                     
                     if (moveX != 0 || moveY != 0)
                     {

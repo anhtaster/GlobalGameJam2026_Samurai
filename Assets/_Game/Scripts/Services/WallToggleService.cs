@@ -135,5 +135,27 @@ namespace GlobalGameJam
             isRegionActive = false;
             Debug.Log("[WallToggleService] Walls restored.");
         }
+
+        /// <summary>
+        /// Re-apply yellow highlights to hidden wall positions.
+        /// Call this after viewport refresh to restore visual state.
+        /// </summary>
+        public void RefreshHighlights()
+        {
+            if (!isRegionActive || gridView == null) return;
+
+            // Check if we have yellow color in config, else default yellow
+            Color highlightColor = Color.yellow;
+            if (gridView.ColorConfig != null)
+            {
+                highlightColor = gridView.ColorConfig.HighlightColor;
+            }
+
+            // Re-apply highlights to all hidden positions
+            foreach (var pos in hiddenPositions)
+            {
+                gridView.SetCellColorOverride(pos, true, highlightColor);
+            }
+        }
     }
 }

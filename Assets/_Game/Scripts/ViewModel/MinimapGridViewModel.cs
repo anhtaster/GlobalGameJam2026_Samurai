@@ -21,6 +21,9 @@ namespace GlobalGameJam
         [Header("Rotation Settings")]
         [SerializeField] private Transform rotationTarget; // Assign the Grid Container here
 
+        // Public property to expose current rotation for input correction
+        public float CurrentRotationAngle { get; private set; }
+
         private void Start()
         {
             Initialize();
@@ -28,7 +31,7 @@ namespace GlobalGameJam
 
         private void Update()
         {
-            RotateMinimap();
+            // RotateMinimap(); // Disabled - map rotation feature removed
         }
 
         private void RotateMinimap()
@@ -52,6 +55,9 @@ namespace GlobalGameJam
                 // So if Player Y = 90, Map Z = 90.
                 float playerY = playerTransform.eulerAngles.y;
                 target.rotation = Quaternion.Euler(0, 0, playerY);
+                
+                // Store the current rotation for input correction
+                CurrentRotationAngle = playerY;
             }
         }
 

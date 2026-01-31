@@ -7141,6 +7141,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GlobalGameJam.WallToggleService
   gridModel: {fileID: 11400000, guid: 63f301ece8eaa514eaf037827d03645b, type: 2}
+  gridView: {fileID: 733761069}
   unsafeLayers:
     serializedVersion: 2
     m_Bits: 8
@@ -7160,8 +7161,12 @@ MonoBehaviour:
   gridView: {fileID: 733761069}
   wallToggleService: {fileID: 292998783}
   ghostLayer: {fileID: 733761071}
+  playerInput: {fileID: 1913406839}
+  scriptsToDisable: []
   currentCursorPos: {x: 0, y: 0}
   navigationCooldown: 0.15
+  invertInputX: 0
+  invertInputY: 0
 --- !u!4 &292998785
 Transform:
   m_ObjectHideFlags: 0
@@ -10505,6 +10510,7 @@ GameObject:
   - component: {fileID: 556743904}
   - component: {fileID: 556743906}
   - component: {fileID: 556743905}
+  - component: {fileID: 556743907}
   m_Layer: 5
   m_Name: MinimapPanel
   m_TagString: Untagged
@@ -10571,6 +10577,20 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 556743903}
   m_CullTransparentMesh: 1
+--- !u!114 &556743907
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 556743903}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3312d7739989d2b4e91e6319e9a96d76, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.RectMask2D
+  m_Padding: {x: 0, y: 0, z: 0, w: 0}
+  m_Softness: {x: 0, y: 0}
 --- !u!1001 &558576422
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -13561,7 +13581,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b66242b693ea52045bd8ba09c6c98a75, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GlobalGameJam.MinimapGridView
-  gridModel: {fileID: 0}
+  gridModel: {fileID: 11400000, guid: 63f301ece8eaa514eaf037827d03645b, type: 2}
   colorConfig: {fileID: 11400000, guid: aea394f6cb319744cb27e38433cc9d93, type: 2}
   cellPrefab: {fileID: 2044715541140975160, guid: 912c1ad417c866140b3b31c07dddc06e, type: 3}
   gridLayout: {fileID: 733761068}
@@ -28882,6 +28902,7 @@ MonoBehaviour:
   playerTransform: {fileID: 487506243}
   viewportWidth: 10
   viewportHeight: 10
+  rotationTarget: {fileID: 733761067}
 --- !u!4 &1408032833
 Transform:
   m_ObjectHideFlags: 0
@@ -40903,6 +40924,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 8997996947095583982, guid: c5efc39a8aaf6e64ea40e9ad573e9b47, type: 3}
   m_PrefabInstance: {fileID: 8638518461064471122}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1913406839 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8616685848737228376, guid: c5efc39a8aaf6e64ea40e9ad573e9b47, type: 3}
+  m_PrefabInstance: {fileID: 8638518461064471122}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62899f850307741f2a39c98a8b639597, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!43 &1913857759
 Mesh:
   m_ObjectHideFlags: 0
