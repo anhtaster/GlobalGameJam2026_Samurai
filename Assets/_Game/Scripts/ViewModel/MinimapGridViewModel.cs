@@ -160,7 +160,7 @@ namespace GlobalGameJam
         {
             if (gridView == null) return Vector2Int.zero;
 
-            RectTransform rect = gridView.GetComponent<RectTransform>();
+            RectTransform rect = rotationTarget != null ? rotationTarget.GetComponent<RectTransform>() : gridView.GetComponent<RectTransform>();
             
             if (RectTransformUtility.ScreenPointToLocalPointInRectangle(rect, Input.mousePosition, null, out Vector2 localPoint))
             {
@@ -170,12 +170,8 @@ namespace GlobalGameJam
                 int x = Mathf.FloorToInt((localPoint.x + (width / 2)) / gridView.CellUISize);
                 int y = Mathf.FloorToInt(((height / 2) - localPoint.y) / gridView.CellUISize);
 
-                x = Mathf.Clamp(x, 0, viewportWidth - 1);
-                y = Mathf.Clamp(y, 0, viewportHeight - 1);
-
-                return new Vector2Int(x, y);
+                return new Vector2Int(Mathf.Clamp(x, 0, viewportWidth - 1), Mathf.Clamp(y, 0, viewportHeight - 1));
             }
-
             return Vector2Int.zero;
         }
 

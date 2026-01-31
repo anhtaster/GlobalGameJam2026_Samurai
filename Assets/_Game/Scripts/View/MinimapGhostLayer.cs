@@ -96,11 +96,11 @@ namespace GlobalGameJam
 
         private void LateUpdate()
         {
-            // Ensure the cursor always renders ON TOP of the grid cells
-            // (In Unity UI, Last Sibling = Drawn Last = On Top)
             if (ghostRect != null)
             {
                 ghostRect.SetAsLastSibling();
+                
+                ghostRect.rotation = Quaternion.identity; 
             }
         }
     }
