@@ -46,7 +46,6 @@ namespace GlobalGameJam
             // Scan scene first
             if (gridScanner != null)
             {
-                Debug.Log("[MinimapGridViewModel] Scanning scene...");
                 gridScanner.ScanScene();
             }
 
@@ -58,8 +57,6 @@ namespace GlobalGameJam
             {
                 InitializeLegacyMode();
             }
-
-            Debug.Log($"[MinimapGridViewModel] Init complete (TextureMode={useTextureMode})");
         }
 
         /// <summary>
@@ -75,19 +72,16 @@ namespace GlobalGameJam
                 playerMarker.SetPlayerTransform(playerTransform);
                 playerMarker.SetTextureRenderer(textureRenderer, mapContainer);
                 playerMarker.SetGridModel(gridModel);
-                Debug.Log("[MinimapGridViewModel] Player marker configured for texture mode");
             }
 
             if (ghostLayer != null && mapContainer != null)
             {
                 ghostLayer.SetTextureMode(textureRenderer, mapContainer, gridModel);
-                Debug.Log("[MinimapGridViewModel] Ghost layer configured for texture mode");
             }
 
             if (wallToggleService != null)
             {
                 wallToggleService.SetTextureRenderer(textureRenderer);
-                Debug.Log("[MinimapGridViewModel] WallToggleService configured for texture mode");
             }
         }
 
@@ -98,7 +92,6 @@ namespace GlobalGameJam
         {
             if (gridView != null)
             {
-                Debug.Log($"[MinimapGridViewModel] Generating grid view ({viewportWidth}x{viewportHeight})...");
                 gridView.GenerateGrid(viewportWidth, viewportHeight);
             }
             else
@@ -110,7 +103,6 @@ namespace GlobalGameJam
             {
                 playerMarker.SetPlayerTransform(playerTransform);
                 playerMarker.SetGridView(gridView);
-                Debug.Log("[MinimapGridViewModel] Player marker initialized (legacy mode)");
             }
         }
 

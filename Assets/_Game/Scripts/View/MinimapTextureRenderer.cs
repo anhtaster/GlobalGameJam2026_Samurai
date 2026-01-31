@@ -78,8 +78,6 @@ namespace GlobalGameJam
             {
                 displayImage.texture = mapTexture;
             }
-
-            Debug.Log($"[MinimapTextureRenderer] Initialized {width}x{height} texture");
         }
 
         /// <summary>

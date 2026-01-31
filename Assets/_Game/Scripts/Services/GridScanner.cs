@@ -86,6 +86,12 @@ namespace GlobalGameJam
             // Get bounds of the object
             Bounds bounds = GetObjectBounds(obj);
             
+            // Debug log for walls
+            if (cellType == CellType.Wall)
+            {
+                Debug.Log($"[GridScanner] WALL: {obj.name} | WorldPos: {obj.transform.position} | Bounds: center={bounds.center}, size={bounds.size}");
+            }
+            
             // Calculate min and max grid positions covered by this object
             Vector3 minWorld = bounds.min;
             Vector3 maxWorld = bounds.max;
@@ -110,6 +116,8 @@ namespace GlobalGameJam
                     // Vertical wall - normalize to single column
                     maxGrid.x = minGrid.x;
                 }
+                
+                Debug.Log($"[GridScanner] WALL: {obj.name} -> Grid [{minGrid.x},{minGrid.y}] to [{maxGrid.x},{maxGrid.y}]");
             }
             
             // Safeguard: limit max cells per object to prevent crashes

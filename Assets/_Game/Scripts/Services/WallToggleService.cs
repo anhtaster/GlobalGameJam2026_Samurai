@@ -21,26 +21,16 @@ namespace GlobalGameJam
         private List<GameObject> hiddenWalls = new List<GameObject>();
         private List<Vector2Int> hiddenPositions = new List<Vector2Int>();
         
-        private Vector2Int activeRegionCenter;
         private bool isRegionActive = false;
         private bool useTextureMode = false;
         private Color highlightColor = Color.yellow;
 
         public bool IsRegionActive => isRegionActive;
 
-        private void Awake()
-        {
-            if (gridModel == null)
-            {
-                Debug.LogWarning("[WallToggleService] MinimapGridModel not assigned!");
-            }
-        }
-
         private void Start()
         {
             useTextureMode = textureRenderer != null;
             
-            // Get highlight color from config
             if (gridView != null && gridView.ColorConfig != null)
             {
                 highlightColor = gridView.ColorConfig.HighlightColor;
@@ -49,11 +39,7 @@ namespace GlobalGameJam
 
         public bool ToggleRegion(Vector2Int centerPos, int maskSize)
         {
-            if (gridModel == null)
-            {
-                Debug.LogError("[WallToggleService] GridModel is null!");
-                return false;
-            }
+            if (gridModel == null) return false;
 
             if (isRegionActive)
             {
@@ -62,11 +48,7 @@ namespace GlobalGameJam
                     RestoreWalls();
                     return true;
                 }
-                else
-                {
-                    Debug.LogWarning("Cannot restore walls! Player is inside.");
-                    return false;
-                }
+                return false;
             }
             else
             {
@@ -98,22 +80,16 @@ namespace GlobalGameJam
                     cell.WorldObject.SetActive(false);
                     hiddenWalls.Add(cell.WorldObject);
                     hiddenPositions.Add(cell.GridPosition);
-
-                    // Update visual
                     SetCellHighlight(cell.GridPosition, true);
                 }
             }
 
-            activeRegionCenter = centerPos;
-            isRegionActive = true;
-            
-            // Apply texture changes
             if (useTextureMode && textureRenderer != null)
             {
                 textureRenderer.ApplyChanges();
             }
-
-            Debug.Log($"[WallToggleService] Hidden {hiddenWalls.Count} walls at {centerPos}");
+            
+            isRegionActive = true;
         }
 
         private bool CanRestoreWalls()
@@ -139,13 +115,11 @@ namespace GlobalGameJam
                 }
             }
 
-            // Restore visuals
             foreach (var pos in hiddenPositions)
             {
                 SetCellHighlight(pos, false);
             }
 
-            // Apply texture changes
             if (useTextureMode && textureRenderer != null)
             {
                 textureRenderer.ApplyChanges();
@@ -154,12 +128,8 @@ namespace GlobalGameJam
             hiddenWalls.Clear();
             hiddenPositions.Clear();
             isRegionActive = false;
-            Debug.Log("[WallToggleService] Walls restored.");
         }
 
-        /// <summary>
-        /// Set highlight for a cell (works for both texture and UI mode)
-        /// </summary>
         private void SetCellHighlight(Vector2Int gridPos, bool highlighted)
         {
             if (useTextureMode && textureRenderer != null)
@@ -172,9 +142,6 @@ namespace GlobalGameJam
             }
         }
 
-        /// <summary>
-        /// Re-apply highlights after map refresh
-        /// </summary>
         public void RefreshHighlights()
         {
             if (!isRegionActive) return;
@@ -206,4 +173,3 @@ namespace GlobalGameJam
         }
     }
 }
-

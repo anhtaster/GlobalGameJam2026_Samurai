@@ -43,7 +43,6 @@ namespace GlobalGameJam
 
             if (playerInput == null && (scriptsToDisable == null || scriptsToDisable.Length == 0))
             {
-                Debug.LogWarning("[MinimapInteractionController] WARNING: PlayerInput/Scripts not assigned!");
             }
             
             // Initialize cursor to center of grid
@@ -115,8 +114,6 @@ namespace GlobalGameJam
         {
             isMapMode = !isMapMode;
 
-            Debug.Log($"[MinimapInteractionController] Map Mode: {isMapMode}");
-
             if (isMapMode)
             {
                 if (playerInput != null) playerInput.DeactivateInput();
@@ -144,7 +141,6 @@ namespace GlobalGameJam
         {
             if (gridModel == null) 
             {
-                Debug.LogError("[MinimapInteractionController] GridModel is NULL!");
                 return;
             }
 
