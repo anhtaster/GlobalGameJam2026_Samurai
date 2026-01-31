@@ -1,5 +1,7 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 using System.Collections;
+using System;
 
 public class TutorialViewModel : MonoBehaviour
 {
@@ -10,6 +12,12 @@ public class TutorialViewModel : MonoBehaviour
     [SerializeField] private AudioSource audioSource;
 
     private Coroutine currentNarrativeCoroutine;
+    private bool isNarrativePlaying = false;
+
+    // Event để notify khi narrator bị skip - các class khác có thể listen
+    public event Action OnNarrativeSkipped;
+
+    public bool IsNarrativePlaying => isNarrativePlaying;
 
     private void Awake()
     {
@@ -33,6 +41,50 @@ public class TutorialViewModel : MonoBehaviour
         }
     }
 
+    private void Update()
+    {
+        // Tab key để skip narrator hiện tại - sử dụng New Input System
+        if (Keyboard.current != null && Keyboard.current.tabKey.wasPressedThisFrame && isNarrativePlaying)
+        {
+            SkipNarrative();
+        }
+    }
+
+    /// <summary>
+    /// Skip narrator hiện tại và trigger event để chuyển sang narrator tiếp theo
+    /// </summary>
+    public void SkipNarrative()
+    {
+        if (!isNarrativePlaying) return;
+
+        Debug.Log("[TutorialViewModel] Skipping current narrative...");
+
+        // Stop coroutine hiện tại
+        if (currentNarrativeCoroutine != null)
+        {
+            StopCoroutine(currentNarrativeCoroutine);
+            currentNarrativeCoroutine = null;
+        }
+
+        // Stop audio hiện tại
+        if (audioSource != null)
+        {
+            audioSource.Stop();
+        }
+
+        // Ẩn subtitle và skip hint ngay lập tức
+        if (view != null)
+        {
+            view.HideSubtitle();
+            view.HideSkipHint();
+        }
+
+        isNarrativePlaying = false;
+
+        // Trigger event để notify các class khác (ví dụ IntroCutscene) chuyển sang narrator tiếp theo
+        OnNarrativeSkipped?.Invoke();
+    }
+
     public void PlayNarrative(string text, AudioClip clip, float displayDuration = 3f)
     {
         Debug.Log($"[TutorialViewModel] PlayNarrative called with text: '{text}'");
@@ -44,6 +96,7 @@ public class TutorialViewModel : MonoBehaviour
             Debug.Log("[TutorialViewModel] Stopped previous narrative");
         }
         
+        isNarrativePlaying = true;
         currentNarrativeCoroutine = StartCoroutine(PlayNarrativeRoutine(text, clip, displayDuration));
     }
 
@@ -58,11 +111,12 @@ public class TutorialViewModel : MonoBehaviour
             audioSource.PlayOneShot(clip);
         }
 
-        // 2. Show Text
+        // 2. Show Text and Skip Hint
         if (view != null)
         {
             view.ShowSubtitle(text);
-            Debug.Log("[TutorialViewModel] Subtitle shown");
+            view.ShowSkipHint(); // Hiện "Press Tab to skip"
+            Debug.Log("[TutorialViewModel] Subtitle and skip hint shown");
         }
         else
         {
@@ -77,11 +131,14 @@ public class TutorialViewModel : MonoBehaviour
         
         yield return new WaitForSeconds(displayDuration);
 
-        // 4. Hide Text
+        // 4. Hide Text and Skip Hint
         if (view != null)
         {
             view.HideSubtitle();
+            view.HideSkipHint();
         }
+        
+        isNarrativePlaying = false;
     }
 
     public void ShowTutorialPanel(float duration)

@@ -5,6 +5,11 @@ namespace GlobalGameJam
 {
     public class MinimapInteractionController : MonoBehaviour
     {
+        private void Awake()
+        {
+            Debug.Log("[MinimapInteractionController] AWAKE called - script is compiled and running!");
+        }
+        
         [Header("References")]
         [SerializeField] private MinimapGridModel gridModel;
         [SerializeField] private WallToggleService wallToggleService;
@@ -75,6 +80,8 @@ namespace GlobalGameJam
             {
                 currentCursorPos = new Vector2Int(gridModel.GridWidth / 2, gridModel.GridHeight / 2);
             }
+            
+            Debug.Log("[MinimapInteractionController] Script STARTED and running!");
         }
 
         private void Update()
@@ -89,13 +96,21 @@ namespace GlobalGameJam
                 // Toggle on each press
                 if (Keyboard.current.mKey.wasPressedThisFrame)
                 {
+                    Debug.Log($"[MinimapInteractionController] M key pressed! tutorialProgressionViewModel null: {tutorialProgressionViewModel == null}");
+                    
                     // Check if MapToggle is unlocked
-                    if (tutorialProgressionViewModel != null && !tutorialProgressionViewModel.IsMapToggleUnlocked)
+                    if (tutorialProgressionViewModel != null)
                     {
-                        Debug.Log("[MinimapInteractionController] Map toggle is locked! Pick up the Map Toggle item first.");
-                        return;
+                        Debug.Log($"[MinimapInteractionController] IsMapToggleUnlocked: {tutorialProgressionViewModel.IsMapToggleUnlocked}");
+                        
+                        if (!tutorialProgressionViewModel.IsMapToggleUnlocked)
+                        {
+                            Debug.Log("[MinimapInteractionController] Map toggle is locked! Pick up the Map Toggle item first.");
+                            return;
+                        }
                     }
                     
+                    Debug.Log("[MinimapInteractionController] Calling SetMapMode...");
                     SetMapMode(!isMapMode);
                 }
 
