@@ -25,6 +25,9 @@ namespace GlobalGameJam
         private Vector2Int previousViewportCenter;
         private float lastUpdateTime;
         private bool isInitialized = false;
+        
+        [Header("Service References")]
+        [SerializeField] private WallToggleService wallToggleService; // Serialize instead of FindObjectOfType
 
         private void Start()
         {
@@ -53,6 +56,15 @@ namespace GlobalGameJam
             }
 
             fullGridModel.Initialize();
+            // wallToggleService is now serialized - fallback to find if not assigned
+            if (wallToggleService == null)
+            {
+                wallToggleService = FindObjectOfType<WallToggleService>();
+                if (wallToggleService == null)
+                {
+                    Debug.LogWarning("[MinimapViewport] WallToggleService not found! Please assign in Inspector.");
+                }
+            }
             isInitialized = true;
             UpdateViewport(true);
         }
@@ -111,6 +123,12 @@ namespace GlobalGameJam
             int startX = currentViewportCenter.x - viewportWidth / 2;
             int endY = currentViewportCenter.y + viewportHeight / 2; // Highest Y in full map = top of viewport
 
+            // Clear previous world position mappings before refreshing
+            if (gridView != null)
+            {
+                gridView.ClearWorldPositionMappings();
+            }
+
             // Update each cell in the grid view
             for (int viewY = 0; viewY < viewportHeight; viewY++) // viewY=0 is TOP of UI
             {
@@ -130,29 +148,30 @@ namespace GlobalGameJam
                     // Get corresponding view cell (viewport coordinates)
                     MinimapCellView cellView = gridView.GetCellView(viewX, viewY);
 
-                    if (cellView != null && cellData != null)
+                    if (cellView != null)
                     {
                         // Clear any previous highlight/override before updating
                         cellView.SetVisualOverride(false, Color.white);
                         
-                        // Update cell view with data from full map
-                        cellView.SetCellType(cellData.CellType);
-                        cellView.WorldGridPosition = fullMapPos; // Important for coordinate mapping
-                    }
-                    else if (cellView != null)
-                    {
-                        // Clear any previous highlight/override
-                        cellView.SetVisualOverride(false, Color.white);
+                        if (cellData != null)
+                        {
+                            // Update cell view with data from full map
+                            cellView.SetCellType(cellData.CellType);
+                        }
+                        else
+                        {
+                            // Out of bounds or no data - show empty
+                            cellView.SetCellType(CellType.Empty);
+                        }
                         
-                        // Out of bounds or no data - show empty
-                        cellView.SetCellType(CellType.Empty);
+                        // Important: Set world position and register for reverse lookup
                         cellView.WorldGridPosition = fullMapPos;
+                        gridView.RegisterWorldPosition(fullMapPos, cellView);
                     }
                 }
             }
 
             // Re-apply yellow highlights for any hidden walls in this viewport
-            WallToggleService wallToggleService = FindObjectOfType<WallToggleService>();
             if (wallToggleService != null)
             {
                 wallToggleService.RefreshHighlights();

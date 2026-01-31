@@ -7,26 +7,111 @@ namespace GlobalGameJam
     {
         [Header("References")]
         [SerializeField] private MinimapGridModel gridModel;
-        [SerializeField] private MinimapGridView gridView;
         [SerializeField] private MinimapPlayerMarkerView playerMarker;
         [SerializeField] private GridScanner gridScanner;
+
+        [Header("Texture Mode (for large maps - RECOMMENDED)")]
+        [SerializeField] private MinimapTextureRenderer textureRenderer;
+        [SerializeField] private RectTransform mapContainer;
+        [SerializeField] private MinimapGhostLayer ghostLayer;
+        [SerializeField] private WallToggleService wallToggleService;
+        
+        [Header("Legacy Mode (for small maps)")]
+        [SerializeField] private MinimapGridView gridView;
 
         [Header("Player Tracking")]
         [SerializeField] private Transform playerTransform;
 
-        [Header("Viewport Settings")]
+        [Header("Viewport Settings (Legacy Mode Only)")]
         [SerializeField] private int viewportWidth = 12;
         [SerializeField] private int viewportHeight = 12;
 
         [Header("Rotation Settings")]
-        [SerializeField] private Transform rotationTarget; // Assign the Grid Container here
+        [SerializeField] private Transform rotationTarget;
 
-        // Public property to expose current rotation for input correction
         public float CurrentRotationAngle { get; private set; }
+        
+        private bool useTextureMode = false;
 
         private void Start()
         {
+            // Determine mode based on what's assigned
+            useTextureMode = textureRenderer != null;
+            
             Initialize();
+        }
+
+        public void Initialize()
+        {
+            // Scan scene first
+            if (gridScanner != null)
+            {
+                Debug.Log("[MinimapGridViewModel] Scanning scene...");
+                gridScanner.ScanScene();
+            }
+
+            if (useTextureMode)
+            {
+                InitializeTextureMode();
+            }
+            else
+            {
+                InitializeLegacyMode();
+            }
+
+            Debug.Log($"[MinimapGridViewModel] Init complete (TextureMode={useTextureMode})");
+        }
+
+        /// <summary>
+        /// Initialize for texture-based rendering (large maps)
+        /// </summary>
+        private void InitializeTextureMode()
+        {
+            // TextureRenderer initializes itself via Start/Invoke
+            // Just wire up the references
+
+            if (playerMarker != null && playerTransform != null)
+            {
+                playerMarker.SetPlayerTransform(playerTransform);
+                playerMarker.SetTextureRenderer(textureRenderer, mapContainer);
+                playerMarker.SetGridModel(gridModel);
+                Debug.Log("[MinimapGridViewModel] Player marker configured for texture mode");
+            }
+
+            if (ghostLayer != null && mapContainer != null)
+            {
+                ghostLayer.SetTextureMode(textureRenderer, mapContainer, gridModel);
+                Debug.Log("[MinimapGridViewModel] Ghost layer configured for texture mode");
+            }
+
+            if (wallToggleService != null)
+            {
+                wallToggleService.SetTextureRenderer(textureRenderer);
+                Debug.Log("[MinimapGridViewModel] WallToggleService configured for texture mode");
+            }
+        }
+
+        /// <summary>
+        /// Initialize for legacy UI grid (small maps)
+        /// </summary>
+        private void InitializeLegacyMode()
+        {
+            if (gridView != null)
+            {
+                Debug.Log($"[MinimapGridViewModel] Generating grid view ({viewportWidth}x{viewportHeight})...");
+                gridView.GenerateGrid(viewportWidth, viewportHeight);
+            }
+            else
+            {
+                Debug.LogError("[MinimapGridViewModel] GridView is not assigned!");
+            }
+
+            if (playerMarker != null && playerTransform != null)
+            {
+                playerMarker.SetPlayerTransform(playerTransform);
+                playerMarker.SetGridView(gridView);
+                Debug.Log("[MinimapGridViewModel] Player marker initialized (legacy mode)");
+            }
         }
 
         private void Update()
@@ -46,50 +131,10 @@ namespace GlobalGameJam
 
             if (target != null)
             {
-                // Rotate opposite to player to keep North Up? Or follow player?
-                // User said "rotate according to player view". 
-                // Usually this means Map's Z rotation = Player's Y rotation.
-                // So if Player turns 90deg Right, Map turns 90deg Left to keep "Forward" Up?
-                // OR Map turns 90deg Right so "Forward" is East?
-                // Let's stick to: Map Roation = Player Rotation. 
-                // So if Player Y = 90, Map Z = 90.
                 float playerY = playerTransform.eulerAngles.y;
                 target.rotation = Quaternion.Euler(0, 0, playerY);
-                
-                // Store the current rotation for input correction
                 CurrentRotationAngle = playerY;
             }
-        }
-
-        public void Initialize()
-        {
-            // Scan scene if scanner is assigned
-            if (gridScanner != null)
-            {
-                Debug.Log("[MinimapGridViewModel] Scanning scene...");
-                gridScanner.ScanScene();
-            }
-
-            // Generate minimap grid UI (viewport mode)
-            if (gridView != null)
-            {
-                Debug.Log($"[MinimapGridViewModel] Generating grid view ({viewportWidth}x{viewportHeight})...");
-                gridView.GenerateGrid(viewportWidth, viewportHeight);
-            }
-            else
-            {
-                Debug.LogError("[MinimapGridViewModel] GridView is not assigned!");
-            }
-
-            // Setup player marker
-            if (playerMarker != null && playerTransform != null)
-            {
-                playerMarker.SetPlayerTransform(playerTransform);
-                playerMarker.SetGridView(gridView);
-                Debug.Log("[MinimapGridViewModel] Player marker initialized");
-            }
-
-            Debug.Log("[MinimapGridViewModel] Initialization complete!");
         }
 
         [ContextMenu("Scan Scene")]
@@ -98,7 +143,12 @@ namespace GlobalGameJam
             if (gridScanner != null)
             {
                 gridScanner.ScanScene();
-                if (gridView != null)
+                
+                if (useTextureMode && textureRenderer != null)
+                {
+                    textureRenderer.RenderFullMap();
+                }
+                else if (gridView != null)
                 {
                     gridView.GenerateGrid(viewportWidth, viewportHeight);
                 }
@@ -108,7 +158,11 @@ namespace GlobalGameJam
         [ContextMenu("Refresh Grid View")]
         public void RefreshGridView()
         {
-            if (gridView != null)
+            if (useTextureMode && textureRenderer != null)
+            {
+                textureRenderer.RenderFullMap();
+            }
+            else if (gridView != null)
             {
                 gridView.GenerateGrid(viewportWidth, viewportHeight);
             }
@@ -130,10 +184,22 @@ namespace GlobalGameJam
                 gridModel.SetCell(gridPos, newType);
             }
 
-            if (gridView != null)
+            if (useTextureMode && textureRenderer != null)
+            {
+                // Update single pixel
+                var cell = gridModel.GetCell(gridPos);
+                if (cell != null && gridView != null && gridView.ColorConfig != null)
+                {
+                    Color color = gridView.ColorConfig.GetColorForCellType(newType);
+                    textureRenderer.UpdateCell(gridPos.x, gridPos.y, color);
+                    textureRenderer.ApplyChanges();
+                }
+            }
+            else if (gridView != null)
             {
                 gridView.UpdateCell(gridPos);
             }
         }
     }
 }
+

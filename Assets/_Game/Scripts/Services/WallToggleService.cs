@@ -7,92 +7,112 @@ namespace GlobalGameJam
     {
         [Header("References")]
         [SerializeField] private MinimapGridModel gridModel;
+        
+        [Header("Texture Mode (for large maps)")]
+        [SerializeField] private MinimapTextureRenderer textureRenderer;
+        
+        [Header("Legacy Mode (for small maps)")]
         [SerializeField] private MinimapGridView gridView;
 
         [Header("Safety Settings")]
-        [SerializeField] private LayerMask unsafeLayers; // Player layer
-        [SerializeField] private Vector3 checkHalfExtents = new Vector3(0.4f, 1f, 0.4f); // Slightly smaller than cell
+        [SerializeField] private LayerMask unsafeLayers;
+        [SerializeField] private Vector3 checkHalfExtents = new Vector3(0.4f, 1f, 0.4f);
 
         private List<GameObject> hiddenWalls = new List<GameObject>();
-        // Keep track of hidden positions for visual restoration
         private List<Vector2Int> hiddenPositions = new List<Vector2Int>();
         
         private Vector2Int activeRegionCenter;
         private bool isRegionActive = false;
+        private bool useTextureMode = false;
+        private Color highlightColor = Color.yellow;
 
         public bool IsRegionActive => isRegionActive;
 
         private void Awake()
         {
-            if (gridView == null)
+            if (gridModel == null)
             {
-                gridView = FindObjectOfType<MinimapGridView>();
-                if (gridView == null)
-                {
-                    Debug.LogError("[WallToggleService] Could not find MinimapGridView!");
-                }
+                Debug.LogWarning("[WallToggleService] MinimapGridModel not assigned!");
+            }
+        }
+
+        private void Start()
+        {
+            useTextureMode = textureRenderer != null;
+            
+            // Get highlight color from config
+            if (gridView != null && gridView.ColorConfig != null)
+            {
+                highlightColor = gridView.ColorConfig.HighlightColor;
             }
         }
 
         public bool ToggleRegion(Vector2Int centerPos, int maskSize)
         {
+            if (gridModel == null)
+            {
+                Debug.LogError("[WallToggleService] GridModel is null!");
+                return false;
+            }
+
             if (isRegionActive)
             {
-                // Try to restore
                 if (CanRestoreWalls())
                 {
                     RestoreWalls();
-                    return true; // Action successful (Restored)
+                    return true;
                 }
                 else
                 {
                     Debug.LogWarning("Cannot restore walls! Player is inside.");
-                    // TODO: Play error sound or visual feedback
-                    return false; // Action failed
+                    return false;
                 }
             }
             else
             {
-                // Hide new region
                 HideRegion(centerPos, maskSize);
-                return true; // Action successful (Hidden)
+                return true;
             }
         }
 
         private void HideRegion(Vector2Int centerPos, int maskSize)
         {
+            if (gridModel == null) return;
+
             int halfSize = maskSize / 2;
             Vector2Int start = centerPos - new Vector2Int(halfSize, halfSize);
             Vector2Int end = centerPos + new Vector2Int(halfSize, halfSize);
 
             List<MinimapCellData> cells = gridModel.GetCellsInRect(start, end);
+            if (cells == null) return;
+            
             hiddenPositions.Clear();
-
-            // Check if we have yellow color in config, else default yellow
-            Color highlightColor = Color.yellow;
-            if (gridView != null && gridView.ColorConfig != null)
-            {
-                highlightColor = gridView.ColorConfig.HighlightColor; 
-            }
+            hiddenWalls.Clear();
 
             foreach (var cell in cells)
             {
+                if (cell == null) continue;
+                
                 if (cell.CellType == CellType.Wall && cell.WorldObject != null)
                 {
                     cell.WorldObject.SetActive(false);
                     hiddenWalls.Add(cell.WorldObject);
-                    hiddenPositions.Add(cell.GridPosition); // Store for restore
+                    hiddenPositions.Add(cell.GridPosition);
 
-                    // Visual Visual Override
-                    if (gridView != null)
-                    {
-                        gridView.SetCellColorOverride(cell.GridPosition, true, highlightColor);
-                    }
+                    // Update visual
+                    SetCellHighlight(cell.GridPosition, true);
                 }
             }
 
             activeRegionCenter = centerPos;
             isRegionActive = true;
+            
+            // Apply texture changes
+            if (useTextureMode && textureRenderer != null)
+            {
+                textureRenderer.ApplyChanges();
+            }
+
             Debug.Log($"[WallToggleService] Hidden {hiddenWalls.Count} walls at {centerPos}");
         }
 
@@ -101,11 +121,9 @@ namespace GlobalGameJam
             foreach (var wall in hiddenWalls)
             {
                 if (wall == null) continue;
-
-                // Check physics at the wall's position
                 if (Physics.CheckBox(wall.transform.position, checkHalfExtents, wall.transform.rotation, unsafeLayers))
                 {
-                    return false; // Obstruction found!
+                    return false;
                 }
             }
             return true;
@@ -122,12 +140,15 @@ namespace GlobalGameJam
             }
 
             // Restore visuals
-            if (gridView != null)
+            foreach (var pos in hiddenPositions)
             {
-                foreach (var pos in hiddenPositions)
-                {
-                    gridView.SetCellColorOverride(pos, false, Color.white);
-                }
+                SetCellHighlight(pos, false);
+            }
+
+            // Apply texture changes
+            if (useTextureMode && textureRenderer != null)
+            {
+                textureRenderer.ApplyChanges();
             }
 
             hiddenWalls.Clear();
@@ -137,25 +158,52 @@ namespace GlobalGameJam
         }
 
         /// <summary>
-        /// Re-apply yellow highlights to hidden wall positions.
-        /// Call this after viewport refresh to restore visual state.
+        /// Set highlight for a cell (works for both texture and UI mode)
+        /// </summary>
+        private void SetCellHighlight(Vector2Int gridPos, bool highlighted)
+        {
+            if (useTextureMode && textureRenderer != null)
+            {
+                textureRenderer.SetCellHighlight(gridPos.x, gridPos.y, highlighted);
+            }
+            else if (gridView != null)
+            {
+                gridView.SetCellColorOverride(gridPos, highlighted, highlighted ? highlightColor : Color.white);
+            }
+        }
+
+        /// <summary>
+        /// Re-apply highlights after map refresh
         /// </summary>
         public void RefreshHighlights()
         {
-            if (!isRegionActive || gridView == null) return;
+            if (!isRegionActive) return;
 
-            // Check if we have yellow color in config, else default yellow
-            Color highlightColor = Color.yellow;
-            if (gridView.ColorConfig != null)
-            {
-                highlightColor = gridView.ColorConfig.HighlightColor;
-            }
-
-            // Re-apply highlights to all hidden positions
             foreach (var pos in hiddenPositions)
             {
-                gridView.SetCellColorOverride(pos, true, highlightColor);
+                SetCellHighlight(pos, true);
+            }
+
+            if (useTextureMode && textureRenderer != null)
+            {
+                textureRenderer.ApplyChanges();
+            }
+        }
+
+        public void SetTextureRenderer(MinimapTextureRenderer renderer)
+        {
+            textureRenderer = renderer;
+            useTextureMode = renderer != null;
+        }
+
+        public void SetGridView(MinimapGridView view)
+        {
+            gridView = view;
+            if (view != null && view.ColorConfig != null)
+            {
+                highlightColor = view.ColorConfig.HighlightColor;
             }
         }
     }
 }
+

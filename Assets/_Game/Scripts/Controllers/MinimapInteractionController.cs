@@ -6,10 +6,17 @@ namespace GlobalGameJam
     public class MinimapInteractionController : MonoBehaviour
     {
         [Header("References")]
-        [SerializeField] private MinimapGridView gridView;
-        [SerializeField] private MinimapGridViewModel viewModel;
+        [SerializeField] private MinimapGridModel gridModel;
         [SerializeField] private WallToggleService wallToggleService;
         [SerializeField] private MinimapGhostLayer ghostLayer;
+        
+        [Header("Texture Mode")]
+        [SerializeField] private MinimapTextureRenderer textureRenderer;
+        [SerializeField] private RectTransform mapContainer;
+        
+        [Header("Legacy Mode (optional)")]
+        [SerializeField] private MinimapGridView gridView;
+        [SerializeField] private MinimapGridViewModel viewModel;
         
         [Header("Player Control")]
         [SerializeField] private PlayerInput playerInput;
@@ -20,16 +27,29 @@ namespace GlobalGameJam
         [SerializeField] private float navigationCooldown = 0.15f;
         private float nextMoveTime;
 
+        [Header("Input Settings")]
+        [SerializeField] private bool invertInputX = false;
+        [SerializeField] private bool invertInputY = false;
+
         private bool isMapMode = false;
+        private bool useTextureMode = false;
 
         private void Start()
         {
+            useTextureMode = textureRenderer != null;
+            
             if (ghostLayer != null)
                 ghostLayer.SetVisible(false);
 
             if (playerInput == null && (scriptsToDisable == null || scriptsToDisable.Length == 0))
             {
-                Debug.LogWarning("[MinimapInteractionController] WARNING: 'Player Input' and 'Scripts To Disable' are empty! The player will NOT stop moving in Map Mode. Please assign them in the Inspector.");
+                Debug.LogWarning("[MinimapInteractionController] WARNING: PlayerInput/Scripts not assigned!");
+            }
+            
+            // Initialize cursor to center of grid
+            if (gridModel != null)
+            {
+                currentCursorPos = new Vector2Int(gridModel.GridWidth / 2, gridModel.GridHeight / 2);
             }
         }
 
@@ -37,10 +57,6 @@ namespace GlobalGameJam
         {
             HandleInput();
         }
-
-        [Header("Input Settings")]
-        [SerializeField] private bool invertInputX = false;
-        [SerializeField] private bool invertInputY = false;
 
         private void HandleInput()
         {
@@ -59,37 +75,26 @@ namespace GlobalGameJam
 
                 if (Keyboard.current != null)
                 {
-                     // Standard WASD mapping to Screen Vectors
-                     // W = Up (+Y), S = Down (-Y)
-                     // D = Right (+X), A = Left (-X)
-                    if (Keyboard.current.wKey.isPressed) inputVector.y = 1;
-                    else if (Keyboard.current.sKey.isPressed) inputVector.y = -1;
+                    if (Keyboard.current.wKey.isPressed) inputVector.y = -1;
+                    else if (Keyboard.current.sKey.isPressed) inputVector.y = 1;
                     
                     if (Keyboard.current.dKey.isPressed) inputVector.x = 1;
                     else if (Keyboard.current.aKey.isPressed) inputVector.x = -1;
                 }
 
-                // Don't allow movement if current region is active (walls already hidden)
-                // But still allow E key to toggle it off!
+                // Block movement if walls already hidden
                 if (inputVector != Vector2.zero && wallToggleService != null && wallToggleService.IsRegionActive)
                 {
-                    // Block WASD movement when in "red" state - must press E first to deselect
                     return;
                 }
 
                 if (inputVector != Vector2.zero)
                 {
-                    // Direct screen-relative movement (no rotation)
-                    // W = Up, S = Down, A = Left, D = Right
-                    // This works regardless of map rotation
                     int moveX = Mathf.RoundToInt(inputVector.x);
                     int moveY = Mathf.RoundToInt(inputVector.y);
 
-                    // Apply Inversions if needed
                     if (invertInputX) moveX = -moveX;
                     if (invertInputY) moveY = -moveY;
-
-                    Debug.Log($"[MinimapInteraction] Input: {inputVector}, Final Move: ({moveX}, {moveY})");
                     
                     if (moveX != 0 || moveY != 0)
                     {
@@ -114,12 +119,9 @@ namespace GlobalGameJam
 
             if (isMapMode)
             {
-                // Enter Map Mode
-                // Disable Player Input
                 if (playerInput != null) playerInput.DeactivateInput();
                 foreach (var script in scriptsToDisable) if (script != null) script.enabled = false;
                 
-                // Show Cursor
                 if (ghostLayer != null)
                 {
                     ghostLayer.SetVisible(true);
@@ -128,12 +130,9 @@ namespace GlobalGameJam
             }
             else
             {
-                // Exit Map Mode
-                // Enable Player Input
                 if (playerInput != null) playerInput.ActivateInput();
                 foreach (var script in scriptsToDisable) if (script != null) script.enabled = true;
 
-                // Hide Cursor
                 if (ghostLayer != null)
                 {
                     ghostLayer.SetVisible(false);
@@ -143,60 +142,56 @@ namespace GlobalGameJam
 
         private void MoveCursor(Vector2Int delta)
         {
-            if (gridView == null) 
+            if (gridModel == null) 
             {
-                Debug.LogError("[MinimapInteractionController] GridView is NULL!");
+                Debug.LogError("[MinimapInteractionController] GridModel is NULL!");
                 return;
             }
 
             Vector2Int newPos = currentCursorPos + delta;
             
-            // Constrain to grid bounds
-            // Check GridView dimensions first (works for viewport mode)
-            if (newPos.x < 0 || newPos.x >= gridView.CurrentWidth ||
-                newPos.y < 0 || newPos.y >= gridView.CurrentHeight)
+            // Constrain to grid bounds using GridModel
+            if (newPos.x < 0 || newPos.x >= gridModel.GridWidth ||
+                newPos.y < 0 || newPos.y >= gridModel.GridHeight)
             {
-                Debug.Log($"[MinimapInteractionController] Move Blocked: {newPos} is out of bounds. Grid Size: {gridView.CurrentWidth}x{gridView.CurrentHeight}");
                 return;
             }
 
             currentCursorPos = newPos;
-            Debug.Log($"[MinimapInteractionController] Moved to {currentCursorPos}");
             UpdateCursorVisuals();
         }
 
         private void UpdateCursorVisuals()
         {
-            if (ghostLayer != null && gridView != null)
+            if (ghostLayer == null) return;
+
+            if (useTextureMode && mapContainer != null && gridModel != null)
             {
+                // Texture mode: calculate cell size from container
+                float cellSize = mapContainer.rect.width / gridModel.GridWidth;
+                ghostLayer.UpdateCursorPosition(currentCursorPos, cellSize);
+            }
+            else if (gridView != null)
+            {
+                // Legacy mode
                 ghostLayer.UpdateCursorPosition(currentCursorPos, gridView.CellUISize);
             }
         }
 
         private void TryToggleWall()
         {
-            if (wallToggleService == null || ghostLayer == null || gridView == null) return;
+            if (wallToggleService == null || ghostLayer == null || gridModel == null) return;
 
-            // Convert Local Viewport Position (currentCursorPos) to World Grid Position
-            MinimapCellView cell = gridView.GetCellView(currentCursorPos);
+            // In texture mode, cursor position IS the world position
+            Vector2Int worldPos = currentCursorPos;
+
+            bool success = wallToggleService.ToggleRegion(worldPos, ghostLayer.MaskSize);
             
-            if (cell != null)
+            if (success)
             {
-                Vector2Int worldPos = cell.WorldGridPosition;
-                Debug.Log($"[MinimapInteractionController] Toggling Region. Cursor: {currentCursorPos} -> World: {worldPos}");
-
-                bool success = wallToggleService.ToggleRegion(worldPos, ghostLayer.MaskSize);
-                
-                if (success)
-                {
-                    // Update visual state (Green <-> Red)
-                    ghostLayer.SetState(wallToggleService.IsRegionActive);
-                }
-            }
-            else
-            {
-                Debug.LogWarning($"[MinimapInteractionController] Could not find CellView at cursor: {currentCursorPos}");
+                ghostLayer.SetState(wallToggleService.IsRegionActive);
             }
         }
     }
 }
+

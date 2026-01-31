@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.UI;
-using System.Collections.Generic;
 
 namespace GlobalGameJam
 {
@@ -9,43 +8,60 @@ namespace GlobalGameJam
         [Header("Settings")]
         [SerializeField] private int maskSize = 9;
         [SerializeField] private Color maskColor = new Color(0, 1, 0, 0.3f);
-        [SerializeField] private Color activeColor = new Color(1, 0, 0, 0.3f); 
+        [SerializeField] private Color activeColor = new Color(1, 0, 0, 0.3f);
+        
+        [Header("Texture Mode (for large maps)")]
+        [SerializeField] private MinimapTextureRenderer textureRenderer;
+        [SerializeField] private RectTransform mapContainer;
+        [SerializeField] private MinimapGridModel gridModel;
+        
+        [Header("Legacy Mode (for small maps)")]
         [SerializeField] private MinimapGridView gridView;
 
         private RectTransform ghostRect;
         private Image ghostImage;
         private Vector2Int currentGridPos;
+        private bool useTextureMode = false;
 
         public int MaskSize => maskSize;
+        public Vector2Int CurrentGridPos => currentGridPos;
 
         private void Awake()
         {
             InitializeGhostVisuals();
         }
 
+        private void Start()
+        {
+            useTextureMode = textureRenderer != null && mapContainer != null;
+        }
+
         private void InitializeGhostVisuals()
         {
-            // Create a simple UI overlay for the ghost cursor
             GameObject ghostObj = new GameObject("GhostCursor_9x9");
             ghostObj.transform.SetParent(transform, false);
             
             ghostRect = ghostObj.AddComponent<RectTransform>();
             ghostImage = ghostObj.AddComponent<Image>();
             ghostImage.color = maskColor;
-            ghostImage.raycastTarget = false; // Interact through it
+            ghostImage.raycastTarget = false;
 
-            // Prevent this object from affecting the GridLayoutGroup
             LayoutElement layoutElement = ghostObj.AddComponent<LayoutElement>();
             layoutElement.ignoreLayout = true;
 
-            // Initial hide
             ghostObj.SetActive(false);
         }
 
         public void SetVisible(bool visible)
         {
             if (ghostImage != null)
+            {
                 ghostImage.gameObject.SetActive(visible);
+                if (visible && ghostRect != null)
+                {
+                    ghostRect.SetAsLastSibling();
+                }
+            }
         }
 
         public void SetState(bool isActiveRegion)
@@ -54,49 +70,80 @@ namespace GlobalGameJam
                 ghostImage.color = isActiveRegion ? activeColor : maskColor;
         }
 
+        /// <summary>
+        /// Update cursor position using cell size (legacy mode)
+        /// </summary>
         public void UpdateCursorPosition(Vector2Int centerGridPos, float cellSize)
         {
-            if (ghostRect == null || gridView == null) return;
+            if (ghostRect == null) return;
 
             currentGridPos = centerGridPos;
-
-            // Size: 9x9 cells
             float size = maskSize * cellSize;
             ghostRect.sizeDelta = new Vector2(size, size);
 
-            // Position: Convert grid pos to local UI position
-            // Assuming GridView centers items or starts top-left. 
-            // We need to match the visual alignment of the MinimapGridView.
-            // Simplified approach: If MinimapGridView uses a GridLayoutGroup, 
-            // we might need to anchor correctly interact with it.
-            
-            // Allow manual calibration if needed, or ask GridView for position of cell (0,0)
-            // Ideally, we place this GhostLayer UNDER the GridView or overlaying it perfectly.
-            
-            // For now, let's assume we can map grid coord to local position.
-            // If the grid is centered:
-            // (x - width/2) * cellSize, (y - height/2) * cellSize
-            // But we need exact logic. Let's try to latch onto a specific cell's position?
-            
-            MinimapCellView cell = gridView.GetCellView(centerGridPos);
+            if (useTextureMode)
+            {
+                UpdatePositionTexture(centerGridPos);
+            }
+            else
+            {
+                UpdatePositionLegacy(centerGridPos);
+            }
+        }
+
+        /// <summary>
+        /// Update cursor position for texture mode
+        /// </summary>
+        private void UpdatePositionTexture(Vector2Int gridPos)
+        {
+            if (mapContainer == null || gridModel == null) return;
+
+            // Calculate position on texture
+            float u = (gridPos.x + 0.5f) / gridModel.GridWidth;
+            float v = (gridPos.y + 0.5f) / gridModel.GridHeight;
+
+            u = Mathf.Clamp01(u);
+            v = Mathf.Clamp01(v);
+
+            Rect containerRect = mapContainer.rect;
+            float localX = (u - 0.5f) * containerRect.width;
+            float localY = (v - 0.5f) * containerRect.height;
+
+            ghostRect.position = mapContainer.TransformPoint(new Vector3(localX, localY, 0));
+
+            // Scale cursor size based on map container to cell ratio
+            float cellPixelSize = containerRect.width / gridModel.GridWidth;
+            float cursorSize = maskSize * cellPixelSize;
+            ghostRect.sizeDelta = new Vector2(cursorSize, cursorSize);
+        }
+
+        /// <summary>
+        /// Update cursor position for legacy UI mode
+        /// </summary>
+        private void UpdatePositionLegacy(Vector2Int gridPos)
+        {
+            if (gridView == null) return;
+
+            MinimapCellView cell = gridView.GetCellView(gridPos);
             if (cell != null)
             {
                 ghostRect.position = cell.transform.position;
             }
-            else
-            {
-                Debug.LogWarning($"[MinimapGhostLayer] Could not find cell view at {centerGridPos}. GridView has {gridView.GridModel?.GridWidth}x{gridView.GridModel?.GridHeight} cells.");
-            }
         }
 
-        private void LateUpdate()
+        public void SetTextureMode(MinimapTextureRenderer renderer, RectTransform container, MinimapGridModel model)
         {
-            // Ensure the cursor always renders ON TOP of the grid cells
-            // (In Unity UI, Last Sibling = Drawn Last = On Top)
-            if (ghostRect != null)
-            {
-                ghostRect.SetAsLastSibling();
-            }
+            textureRenderer = renderer;
+            mapContainer = container;
+            gridModel = model;
+            useTextureMode = renderer != null && container != null;
+        }
+
+        public void SetGridView(MinimapGridView view)
+        {
+            gridView = view;
+            useTextureMode = false;
         }
     }
 }
+
