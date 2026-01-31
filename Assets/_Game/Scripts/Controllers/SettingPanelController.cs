@@ -12,6 +12,10 @@ public class SettingPanelController : MonoBehaviour
     public Slider[] sliders;           // Kéo các Slider tương ứng vào đây
     public Button[] actionButtons;
 
+    [Header("Audio Sources")]
+    public AudioSource musicSource;    // Kéo AudioSource cho Music vào đây
+    public AudioSource sfxSource;      // Kéo AudioSource cho SFX vào đây
+
     [Header("Visual Settings")]
     public Color selectedColor = Color.white;
     public Color unselectedColor = new Color(1f, 1f, 1f, 0.4f); // Làm mờ khi không chọn
@@ -19,15 +23,46 @@ public class SettingPanelController : MonoBehaviour
     [Header("Control Settings")]
     public float sliderSpeed = 0.5f;
 
+    [Header("Lighting Settings")]
+    [Range(0f, 2f)]
+    public float minLightIntensity = 0f;
+    [Range(0f, 2f)]
+    public float maxLightIntensity = 2f;
+
     private int currentIndex = 0;
     private bool isOpen = false;
+    private float defaultLightIntensity;
 
     public event Action OnSettingClosed;
 
     void Start()
     {
         if (settingsPanel != null) settingsPanel.SetActive(false);
+        
+        // Lưu giá trị mặc định của Environment Lighting
+        defaultLightIntensity = RenderSettings.ambientIntensity;
+        
+        // Khởi tạo slider listeners
+        InitializeSliders();
+        
         UpdateSelectionVisuals();
+    }
+
+    void InitializeSliders()
+    {
+        if (sliders == null || sliders.Length < 3) return;
+
+        // Slider 0: Light
+        sliders[0].onValueChanged.AddListener(OnLightSliderChanged);
+        sliders[0].value = Mathf.InverseLerp(minLightIntensity, maxLightIntensity, RenderSettings.ambientIntensity);
+
+        // Slider 1: SFX
+        sliders[1].onValueChanged.AddListener(OnSFXSliderChanged);
+        if (sfxSource != null) sliders[1].value = sfxSource.volume;
+
+        // Slider 2: Music
+        sliders[2].onValueChanged.AddListener(OnMusicSliderChanged);
+        if (musicSource != null) sliders[2].value = musicSource.volume;
     }
 
     void Update()
@@ -140,6 +175,35 @@ public class SettingPanelController : MonoBehaviour
         Debug.Log("[SettingPanelController] BackToPreviousMenu() called");
         // Gọi UIController để quay về panel trước đó
         UIController.Instance.CloseSettingsAndReturnToPrevious();
+    }
+
+    // Callback methods for sliders
+    void OnLightSliderChanged(float value)
+    {
+        // value từ 0 đến 1, map sang minLightIntensity -> maxLightIntensity
+        float intensity = Mathf.Lerp(minLightIntensity, maxLightIntensity, value);
+        RenderSettings.ambientIntensity = intensity;
+        Debug.Log($"[SettingPanelController] Light intensity set to: {intensity}");
+    }
+
+    void OnSFXSliderChanged(float value)
+    {
+        // value từ 0 (tắt tiếng) đến 1 (max volume)
+        if (sfxSource != null)
+        {
+            sfxSource.volume = value;
+            Debug.Log($"[SettingPanelController] SFX volume set to: {value}");
+        }
+    }
+
+    void OnMusicSliderChanged(float value)
+    {
+        // value từ 0 (tắt tiếng) đến 1 (max volume)
+        if (musicSource != null)
+        {
+            musicSource.volume = value;
+            Debug.Log($"[SettingPanelController] Music volume set to: {value}");
+        }
     }
 
     // public void BackToPauseMenu()
