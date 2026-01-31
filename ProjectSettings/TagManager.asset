@@ -7,6 +7,9 @@ TagManager:
   - CinemachineTarget
   - Floor
   - Wall
+  - R
+  - G
+  - B
   layers:
   - Default
   - TransparentFX

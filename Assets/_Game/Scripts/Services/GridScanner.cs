@@ -14,11 +14,12 @@ namespace GlobalGameJam
         [Header("Scan Settings")]
         [SerializeField] private string floorTag = "Floor";
         [SerializeField] private string wallTag = "Wall";
+        [SerializeField] private string[] extraColorTags = { "R", "G", "B" };
         [SerializeField] private LayerMask scanLayerMask = -1; // Scan all layers by default
 
         [Header("Grid Configuration")]
-        [SerializeField] private int gridWidth = 9;
-        [SerializeField] private int gridHeight = 9;
+        [SerializeField] private int gridWidth = 50;
+        [SerializeField] private int gridHeight = 50;
         [SerializeField] private float cellSize = 1f;
         [SerializeField] private Vector3 gridOrigin = Vector3.zero;
 
@@ -70,6 +71,15 @@ namespace GlobalGameJam
                 RegisterObject(obj, CellType.Wall);
             }
 
+            foreach (string tag in extraColorTags)
+            {
+                GameObject[] extraObjects = GameObject.FindGameObjectsWithTag(tag);
+                foreach (var obj in extraObjects)
+                {
+                    RegisterObject(obj, CellType.Wall); 
+                }
+            }
+
             // Post-process: thin wall corners to single cells
             ThinWallCorners();
 
@@ -79,6 +89,7 @@ namespace GlobalGameJam
         /// <summary>
         /// Register a GameObject to the grid
         /// </summary>
+        
         private void RegisterObject(GameObject obj, CellType cellType)
         {
             if (obj == null) return;
@@ -101,7 +112,7 @@ namespace GlobalGameJam
             
             // For WALLS: Normalize to 1 cell thickness, keep full length
             // Deduplication in SetCell will prevent overlaps at junctions
-            if (cellType == CellType.Wall)
+            if (cellType == CellType.Wall && obj.CompareTag(wallTag))
             {
                 int widthX = maxGrid.x - minGrid.x;
                 int widthY = maxGrid.y - minGrid.y;

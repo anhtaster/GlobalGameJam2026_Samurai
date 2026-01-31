@@ -1553,6 +1553,10 @@ MonoBehaviour:
   gridModel: {fileID: 11400000, guid: 63f301ece8eaa514eaf037827d03645b, type: 2}
   floorTag: Floor
   wallTag: Wall
+  extraColorTags:
+  - R
+  - G
+  - B
   scanLayerMask:
     serializedVersion: 2
     m_Bits: 4294967295
